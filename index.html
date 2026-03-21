@@ -1525,6 +1525,8 @@ body {
       d.obj.rotation.y+=d.rotSpeed*0.7;
     }
 
+    // Slowly drift the galaxy toward the camera once it appears
+    if(current>=11&&L6.position.z<-20) L6.position.z+=0.012;
     L6.rotation.y+=0.003;L6.rotation.x=Math.sin(t*0.15)*0.03;
     if(moonWire)moonWire.rotation.y+=0.0008;
     if(earthFar)earthFar.rotation.y+=0.0005;
