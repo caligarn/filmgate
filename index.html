@@ -1306,7 +1306,7 @@ body {
   // ═══════════════════════════════════════
   // LAYER 6: GALAXY (slides 11-13)
   // ═══════════════════════════════════════
-  const L6=new THREE.Group();L6.position.y=750;
+  const L6=new THREE.Group();L6.position.y=1100;
   // Dense spiral arms — 12 arms, triple-stranded
   for(let arm=0;arm<12;arm++){
     const off=(arm/6)*Math.PI*2;
@@ -1427,9 +1427,66 @@ body {
   scene.add(trails);
 
   // ═══════════════════════════════════════
+  // COMETS — streak across on final slides
+  // ═══════════════════════════════════════
+  const comets=[];
+  const cometGroup=new THREE.Group();
+  scene.add(cometGroup);
+
+  function spawnComet(){
+    const comet={};
+    // Random direction: mostly diagonal, from edges
+    const fromLeft=Math.random()>0.5;
+    const goingUp=Math.random()>0.3;
+    const speed=1.2+Math.random()*2.5;
+    const sx=fromLeft?-90-Math.random()*30:90+Math.random()*30;
+    const baseY=870;// near final slide camera altitude
+    const sy=baseY+(Math.random()-0.5)*60;
+    const sz=-5-Math.random()*50;
+    const dx=(fromLeft?1:-1)*(0.6+Math.random()*0.4)*speed;
+    const dy=(goingUp?1:-1)*(0.2+Math.random()*0.5)*speed;
+    comet.vel=new THREE.Vector3(dx,dy,0);
+    comet.life=0;
+    comet.maxLife=80+Math.random()*60;
+
+    // Comet head — bright glowing sphere
+    const headGeo=new THREE.SphereGeometry(0.35+Math.random()*0.3,8,6);
+    const headMat=solidMat(Math.random()>0.5?BRIGHT:WARM,0.9);
+    comet.head=new THREE.Mesh(headGeo,headMat);
+    comet.head.position.set(sx,sy,sz);
+    cometGroup.add(comet.head);
+
+    // Glow halo around head
+    const haloGeo=new THREE.CircleGeometry(1.2+Math.random()*0.8,12);
+    const haloMat=solidMat(ORANGE,0.15);
+    comet.halo=new THREE.Mesh(haloGeo,haloMat);
+    comet.halo.position.copy(comet.head.position);
+    cometGroup.add(comet.halo);
+
+    // Tail — series of fading trail segments
+    comet.tailParts=[];
+    const tailLen=12+Math.floor(Math.random()*10);
+    for(let t=0;t<tailLen;t++){
+      const ts=0.3-t*(0.3/tailLen);
+      const tGeo=new THREE.SphereGeometry(Math.max(ts,0.03),4,4);
+      const tMat=solidMat(t<tailLen*0.3?WARM:(t<tailLen*0.6?ORANGE:GOLD),Math.max(0.5-t*(0.5/tailLen),0.02));
+      const tp=new THREE.Mesh(tGeo,tMat);
+      tp.position.copy(comet.head.position);
+      cometGroup.add(tp);
+      comet.tailParts.push({mesh:tp,offset:t});
+    }
+
+    // Store previous positions for tail trailing
+    comet.history=[];
+    for(let h=0;h<(tailLen+5);h++) comet.history.push(comet.head.position.clone());
+
+    comets.push(comet);
+  }
+
+  // ═══════════════════════════════════════
   // CAMERA & ANIMATION
   // ═══════════════════════════════════════
-  const alts=[5,5,50,80,140,180,220,300,380,470,550,650,750,770];
+  const alts=[5,5,50,80,140,180,220,300,380,470,550,700,800,870];
   let curAlt=alts[0],curRot=0,lookY=alts[0]-5;
   const clock=new THREE.Clock();
 
@@ -1474,6 +1531,46 @@ body {
     const pulse=1+Math.sin(t*0.8)*0.08;
     core.scale.set(pulse,pulse,pulse);core.rotation.y+=0.005;core.rotation.x+=0.003;
     coreInner.scale.set(1/pulse,1/pulse,1/pulse);coreInner.rotation.y-=0.008;coreInner.rotation.z+=0.004;
+
+    // Comets — spawn on final slides (11-13) and animate
+    if(current>=11){
+      // Spawn new comets periodically
+      if(Math.random()<0.04&&comets.length<8) spawnComet();
+
+      // Animate existing comets
+      for(let ci=comets.length-1;ci>=0;ci--){
+        const c=comets[ci];
+        c.life++;
+        // Move head
+        c.head.position.add(c.vel);
+        c.halo.position.copy(c.head.position);
+        c.halo.lookAt(camera.position);
+        // Record position history
+        c.history.unshift(c.head.position.clone());
+        if(c.history.length>30) c.history.pop();
+        // Update tail to follow head's path
+        for(let ti=0;ti<c.tailParts.length;ti++){
+          const idx=Math.min(ti+1,c.history.length-1);
+          c.tailParts[ti].mesh.position.copy(c.history[idx]);
+        }
+        // Remove dead comets
+        if(c.life>c.maxLife){
+          cometGroup.remove(c.head);
+          cometGroup.remove(c.halo);
+          for(const tp of c.tailParts) cometGroup.remove(tp.mesh);
+          comets.splice(ci,1);
+        }
+      }
+    } else {
+      // Clean up comets when not on final slides
+      for(const c of comets){
+        cometGroup.remove(c.head);
+        cometGroup.remove(c.halo);
+        for(const tp of c.tailParts) cometGroup.remove(tp.mesh);
+      }
+      comets.length=0;
+    }
+
     renderer.render(scene,camera);
   }
   animate();
