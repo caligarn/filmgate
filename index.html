@@ -1496,7 +1496,7 @@ body {
     const tAlt=alts[Math.min(targetSlide,alts.length-1)];
     curAlt+=(tAlt-curAlt)*0.008;
     lookY+=(tAlt-8-lookY)*0.006;
-    curRot+=0.0004;
+    curRot+=0.0007;
 
     camera.position.y=curAlt;
     camera.position.x=Math.sin(curRot)*6;
@@ -1525,12 +1525,12 @@ body {
       d.obj.rotation.y+=d.rotSpeed*0.7;
     }
 
-    L6.rotation.y+=0.0012;L6.rotation.x=Math.sin(t*0.15)*0.03;
+    L6.rotation.y+=0.003;L6.rotation.x=Math.sin(t*0.15)*0.03;
     if(moonWire)moonWire.rotation.y+=0.0008;
     if(earthFar)earthFar.rotation.y+=0.0005;
     const pulse=1+Math.sin(t*0.8)*0.08;
-    core.scale.set(pulse,pulse,pulse);core.rotation.y+=0.005;core.rotation.x+=0.003;
-    coreInner.scale.set(1/pulse,1/pulse,1/pulse);coreInner.rotation.y-=0.008;coreInner.rotation.z+=0.004;
+    core.scale.set(pulse,pulse,pulse);core.rotation.y+=0.012;core.rotation.x+=0.007;
+    coreInner.scale.set(1/pulse,1/pulse,1/pulse);coreInner.rotation.y-=0.018;coreInner.rotation.z+=0.009;
 
     // Comets — spawn on final slides (11-13) and animate
     if(current>=11){
