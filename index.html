@@ -976,10 +976,19 @@ body {
   // ═══════════════════════════════════════
   const L1=new THREE.Group();
 
-  // Dense water grid — 80 rows
+  // Animated wavy lake — positioned at bottom of view
+  const lakeLines=[];
   for(let r=0;r<80;r++){
-    const z=-35+r*2;const o=0.08+(r/40)*0.18;
-    L1.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(smoothLine(0,z,0.12+r*0.015,1.5+r*0.08,80,180)),gradMat(DEEP,GOLD,o)));
+    const z=-15+r*1.2;const o=0.1+(r/40)*0.22;
+    const seg=80;const w=200;
+    const pts=[];
+    for(let i=0;i<=seg;i++){const t=i/seg;const x=(t-0.5)*w;
+      pts.push(new THREE.Vector3(x,-8,z));
+    }
+    const geo=new THREE.BufferGeometry().setFromPoints(pts);
+    const line=new THREE.Line(geo,gradMat(DEEP,GOLD,o));
+    L1.add(line);
+    lakeLines.push({geo,seg,w,z,baseY:-8,r});
   }
   // Mountain silhouettes — 12 layers with fills
   for(let l=0;l<12;l++){
@@ -1415,6 +1424,25 @@ body {
   addOrbiter('spaceship',38,0.07,0.6,0xdddddd,0.4);
   addOrbiter('spaceship',11,0.22,0.35,WHITE,0.5);
 
+  // Far-orbit objects — larger radii, slower, dimmer
+  addOrbiter('planet',55,0.02,3.5,0x993300,0.15);
+  addOrbiter('planet',65,0.015,2.0,DEEP,0.12);
+  addOrbiter('planet',75,0.012,4.0,0x661100,0.1);
+  addOrbiter('planet',48,0.025,1.8,ORANGE,0.18);
+  addOrbiter('planet',85,0.01,2.5,WARM,0.08);
+  addOrbiter('star',50,0.022,0.9,BRIGHT,0.4);
+  addOrbiter('star',60,0.018,0.7,PALE,0.35);
+  addOrbiter('star',72,0.013,1.0,WHITE,0.3);
+  addOrbiter('star',80,0.011,0.5,GOLD,0.25);
+  addOrbiter('star',90,0.008,1.2,WARM,0.2);
+  addOrbiter('satellite',52,0.02,0.8,0x777777,0.3);
+  addOrbiter('satellite',68,0.014,0.9,0x999999,0.25);
+  addOrbiter('satellite',82,0.01,0.7,0x888888,0.2);
+  addOrbiter('spaceship',58,0.025,0.5,0xaaaaaa,0.3);
+  addOrbiter('spaceship',70,0.016,0.45,0xcccccc,0.25);
+  addOrbiter('spaceship',88,0.009,0.6,WHITE,0.2);
+  addOrbiter('spaceship',95,0.007,0.4,0xbbbbbb,0.15);
+
   scene.add(L6);
 
   // ═══════════════════════════════════════
@@ -1584,6 +1612,19 @@ body {
       const p=f.phase||0;
       f.obj.position.y+=Math.sin(t*f.speed+p)*0.003*f.amp;
       if(f.spin){f.obj.rotation.x+=0.001;f.obj.rotation.y+=0.0015;}
+    }
+
+    // Animate lake waves
+    for(const lk of lakeLines){
+      const pos=lk.geo.attributes.position;
+      for(let i=0;i<=lk.seg;i++){
+        const xn=i/lk.seg;
+        const wave=Math.sin(xn*Math.PI*3+t*1.2+lk.r*0.15)*0.4
+                  +Math.sin(xn*Math.PI*7-t*0.8+lk.r*0.3)*0.15
+                  +Math.sin(xn*Math.PI*1.5+t*0.5)*0.25*(1+lk.r*0.01);
+        pos.setY(i,lk.baseY+wave);
+      }
+      pos.needsUpdate=true;
     }
 
     // Depth sprites spin
