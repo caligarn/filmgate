@@ -1348,6 +1348,73 @@ body {
     const star=new THREE.Mesh(new THREE.CircleGeometry(ss,5),solidMat(bright?WARM:(Math.random()>0.5?GOLD:WHITE),bright?0.8:0.1+Math.random()*0.35));
     star.position.set(sx,sy,sz);star.lookAt(camera.position);L6.add(star);
   }
+  // Tilt galaxy so disc is seen from slightly above
+  L6.rotation.x=-0.38;
+
+  // ── Orbiting objects: planets, stars, satellites, spaceships ──
+  const orbiters=[];
+  const CORE_Z=-35; // core offset inside L6
+  function addOrbiter(type,radius,speed,size,color,opacity){
+    let mesh;
+    if(type==='planet'){
+      const g=new THREE.IcosahedronGeometry(size,1);
+      mesh=new THREE.Mesh(g,solidMat(color,opacity));
+      // add a ring to some planets
+      if(Math.random()>0.5){
+        const ring=new THREE.Mesh(new THREE.TorusGeometry(size*1.6,size*0.12,6,24),solidMat(GOLD,0.25));
+        ring.rotation.x=Math.PI*0.45;mesh.add(ring);
+      }
+    } else if(type==='star'){
+      mesh=new THREE.Mesh(new THREE.SphereGeometry(size,8,6),solidMat(color,opacity));
+      // glow halo
+      const halo=new THREE.Mesh(new THREE.CircleGeometry(size*3,12),solidMat(color,0.06));
+      mesh.add(halo);
+    } else if(type==='satellite'){
+      const body=new THREE.Mesh(new THREE.BoxGeometry(size,size*0.5,size*0.5),solidMat(color,opacity));
+      const panelL=new THREE.Mesh(new THREE.PlaneGeometry(size*2.5,size*0.8),solidMat(0x3366aa,0.5));
+      panelL.position.x=-size*1.8;body.add(panelL);
+      const panelR=new THREE.Mesh(new THREE.PlaneGeometry(size*2.5,size*0.8),solidMat(0x3366aa,0.5));
+      panelR.position.x=size*1.8;body.add(panelR);
+      mesh=body;
+    } else { // spaceship
+      const hull=new THREE.Mesh(new THREE.ConeGeometry(size*0.6,size*2.5,6),solidMat(color,opacity));
+      hull.rotation.z=Math.PI*0.5;
+      // engine glow
+      const eng=new THREE.Mesh(new THREE.SphereGeometry(size*0.4,6,4),solidMat(0x66ccff,0.6));
+      eng.position.y=-size*1.2;hull.add(eng);
+      mesh=hull;
+    }
+    const angle=Math.random()*Math.PI*2;
+    const yOff=(Math.random()-0.5)*4;
+    mesh.position.set(Math.cos(angle)*radius,yOff,Math.sin(angle)*radius+CORE_Z);
+    L6.add(mesh);
+    orbiters.push({mesh,radius,speed,angle,yOff,type});
+  }
+
+  // Planets (larger, slower, closer orbits)
+  addOrbiter('planet',18,0.08,1.8,ORANGE,0.35);
+  addOrbiter('planet',24,0.055,2.2,0xcc4400,0.3);
+  addOrbiter('planet',32,0.04,1.5,WARM,0.25);
+  addOrbiter('planet',40,0.03,2.8,DEEP,0.2);
+  addOrbiter('planet',14,0.1,1.2,GOLD,0.35);
+
+  // Bright orbiting stars
+  addOrbiter('star',10,0.12,0.6,BRIGHT,0.7);
+  addOrbiter('star',22,0.065,0.5,WHITE,0.6);
+  addOrbiter('star',36,0.035,0.8,PALE,0.5);
+  addOrbiter('star',28,0.05,0.4,GOLD,0.65);
+
+  // Satellites
+  addOrbiter('satellite',12,0.15,0.7,0x888888,0.5);
+  addOrbiter('satellite',20,0.09,0.5,0xaaaaaa,0.4);
+  addOrbiter('satellite',30,0.06,0.6,0x999999,0.45);
+
+  // Spaceships (small, fast, varied orbits)
+  addOrbiter('spaceship',15,0.18,0.5,0xcccccc,0.5);
+  addOrbiter('spaceship',26,0.12,0.4,0xbbbbbb,0.45);
+  addOrbiter('spaceship',38,0.07,0.6,0xdddddd,0.4);
+  addOrbiter('spaceship',11,0.22,0.35,WHITE,0.5);
+
   scene.add(L6);
 
   // ═══════════════════════════════════════
@@ -1527,7 +1594,18 @@ body {
 
     // Slowly drift the galaxy toward the camera once it appears
     if(current>=11&&L6.position.z<-20) L6.position.z+=0.012;
-    L6.rotation.y+=0.003;L6.rotation.x=Math.sin(t*0.15)*0.03;
+    L6.rotation.y+=0.003;L6.rotation.x=-0.38+Math.sin(t*0.15)*0.03;
+
+    // Animate orbiting objects around the black hole
+    for(const ob of orbiters){
+      ob.angle+=ob.speed*0.016;
+      ob.mesh.position.x=Math.cos(ob.angle)*ob.radius;
+      ob.mesh.position.z=Math.sin(ob.angle)*ob.radius+(-35);
+      ob.mesh.position.y=ob.yOff+Math.sin(t*0.5+ob.angle)*0.5;
+      if(ob.type==='spaceship') ob.mesh.rotation.y=ob.angle+Math.PI*0.5;
+      else if(ob.type==='satellite'){ob.mesh.rotation.y+=0.02;ob.mesh.rotation.z+=0.005;}
+      else ob.mesh.rotation.y+=0.008;
+    }
     if(moonWire)moonWire.rotation.y+=0.0008;
     if(earthFar)earthFar.rotation.y+=0.0005;
     const pulse=1+Math.sin(t*0.8)*0.08;
