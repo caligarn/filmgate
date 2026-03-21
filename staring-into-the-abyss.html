@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staring Into the Abyss — Minh Do</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg-elevated: #111111;
+  --bg-card: #141414;
+  --border: #1e1e1e;
+  --text: #e8e8e8;
+  --text-muted: #aaaaaa;
+  --text-dim: #777777;
+  --accent: #f97316;
+  --accent-glow: rgba(249, 115, 22, 0.12);
+  --gold: #d4a84b;
+  --mono: 'JetBrains Mono', 'Consolas', monospace;
+  --radius: 12px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif;
+  line-height: 1.6; -webkit-font-smoothing: antialiased; overflow: hidden; height: 100vh; width: 100vw;
+}
+.deck { position: relative; width: 100vw; height: 100vh; z-index: 2; perspective: 1400px; }
+#bgCanvas {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 0; pointer-events: none;
+}
+.slide {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 2.5rem 4rem; opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+  overflow-y: auto;
+}
+.slide.active { opacity: 1; pointer-events: auto; z-index: 2; }
+.slide.prev { opacity: 0; }
+
+/* ── ENTER: elements assemble from scattered positions ── */
+.slide.active .section-label { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+.slide.active .section-title { animation: flyFromRight 1s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+.slide.active .section-intro { animation: fadeRise 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .hero-title { animation: heroZoomIn 1.2s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+.slide.active .hero-sub { animation: fadeRise 1s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+.slide.active .hero-meta { animation: fadeRise 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+.slide.active .ascii-art, .slide.active .ascii-divider { animation: glitchIn 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
+.slide.active .quote-block { animation: slideFromBottom 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
+.slide.active .bio-photo { animation: spinIn 1s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
+.slide.active .bio-name { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .bio-title-text { animation: typeIn 0.6s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+.slide.active .closing-title { animation: heroZoomIn 1.2s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+.slide.active .closing-meta { animation: fadeRise 0.8s cubic-bezier(0.16,1,0.3,1) 0.6s both; }
+.slide.active .card-stat { animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.4s both; }
+
+/* Cards scatter in from alternating sides */
+.slide.active .card:nth-child(odd) { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .card:nth-child(even) { animation: flyFromRight 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .card:nth-child(1) { animation-delay: 0.2s; }
+.slide.active .card:nth-child(2) { animation-delay: 0.28s; }
+.slide.active .card:nth-child(3) { animation-delay: 0.36s; }
+.slide.active .card:nth-child(4) { animation-delay: 0.44s; }
+.slide.active .card:nth-child(5) { animation-delay: 0.52s; }
+.slide.active .card:nth-child(6) { animation-delay: 0.6s; }
+.slide.active .card:nth-child(7) { animation-delay: 0.68s; }
+
+.slide.active .path-card:nth-child(1) { animation: flyFromLeft 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .path-card:nth-child(2) { animation: flyFromRight 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+.slide.active .future-card:nth-child(1) { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .future-card:nth-child(2) { animation: flyFromRight 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+.slide.active .future-card:nth-child(3) { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
+.slide.active .future-card:nth-child(4) { animation: flyFromRight 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+
+/* Therapy items cascade with alternating directions */
+.slide.active .therapy-item:nth-child(odd) { animation: flyFromLeft 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .therapy-item:nth-child(even) { animation: flyFromRight 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .therapy-item:nth-child(1) { animation-delay: 0.15s; }
+.slide.active .therapy-item:nth-child(2) { animation-delay: 0.2s; }
+.slide.active .therapy-item:nth-child(3) { animation-delay: 0.25s; }
+.slide.active .therapy-item:nth-child(4) { animation-delay: 0.3s; }
+.slide.active .therapy-item:nth-child(5) { animation-delay: 0.35s; }
+.slide.active .therapy-item:nth-child(6) { animation-delay: 0.4s; }
+.slide.active .therapy-item:nth-child(7) { animation-delay: 0.45s; }
+.slide.active .therapy-item:nth-child(8) { animation-delay: 0.5s; }
+
+/* Bio bullets drop in with bounce */
+.slide.active .bio-bullets li { animation: dropIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+.slide.active .bio-bullets li:nth-child(1) { animation-delay: 0.3s; }
+.slide.active .bio-bullets li:nth-child(2) { animation-delay: 0.38s; }
+.slide.active .bio-bullets li:nth-child(3) { animation-delay: 0.46s; }
+.slide.active .bio-bullets li:nth-child(4) { animation-delay: 0.54s; }
+.slide.active .bio-bullets li:nth-child(5) { animation-delay: 0.62s; }
+.slide.active .bio-bullets li:nth-child(6) { animation-delay: 0.7s; }
+.slide.active .bio-bullets li:nth-child(7) { animation-delay: 0.78s; }
+
+.slide.active .principle:nth-child(1) { animation: flyFromLeft 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .principle:nth-child(2) { animation: flyFromRight 0.7s cubic-bezier(0.16,1,0.3,1) 0.32s both; }
+.slide.active .principle:nth-child(3) { animation: flyFromLeft 0.7s cubic-bezier(0.16,1,0.3,1) 0.44s both; }
+
+/* ── EXIT: elements scatter outward and down ── */
+.slide.prev .section-label { animation: flyOutRight 0.4s ease-in both; }
+.slide.prev .section-title { animation: flyOutLeft 0.5s ease-in both; }
+.slide.prev .section-intro { animation: fadeDown 0.4s ease-in both; }
+.slide.prev .quote-block { animation: fadeDown 0.4s ease-in 0.05s both; }
+.slide.prev .hero-title { animation: flyOutLeft 0.5s ease-in both; }
+.slide.prev .closing-title { animation: flyOutLeft 0.5s ease-in both; }
+.slide.prev .ascii-art { animation: glitchOut 0.35s ease-in both; }
+.slide.prev .card { animation: scatterOut 0.45s ease-in both; }
+.slide.prev .card:nth-child(1) { --sx:-40px; --sy:60px; --sr:3deg; }
+.slide.prev .card:nth-child(2) { --sx:50px; --sy:80px; --sr:-4deg; }
+.slide.prev .card:nth-child(3) { --sx:-30px; --sy:70px; --sr:5deg; }
+.slide.prev .card:nth-child(4) { --sx:60px; --sy:50px; --sr:-3deg; }
+.slide.prev .card:nth-child(5) { --sx:-50px; --sy:90px; --sr:4deg; }
+.slide.prev .card:nth-child(6) { --sx:40px; --sy:60px; --sr:-5deg; }
+.slide.prev .card:nth-child(7) { --sx:-20px; --sy:80px; --sr:3deg; }
+.slide.prev .path-card { animation: scatterOut 0.45s ease-in both; }
+.slide.prev .path-card:nth-child(1) { --sx:-60px; --sy:70px; --sr:4deg; }
+.slide.prev .path-card:nth-child(2) { --sx:60px; --sy:70px; --sr:-4deg; }
+.slide.prev .future-card { animation: scatterOut 0.45s ease-in both; }
+.slide.prev .future-card:nth-child(1) { --sx:-50px; --sy:60px; --sr:3deg; }
+.slide.prev .future-card:nth-child(2) { --sx:50px; --sy:60px; --sr:-3deg; }
+.slide.prev .future-card:nth-child(3) { --sx:-50px; --sy:80px; --sr:4deg; }
+.slide.prev .future-card:nth-child(4) { --sx:50px; --sy:80px; --sr:-4deg; }
+.slide.prev .therapy-item { animation: fadeDown 0.25s ease-in both; }
+
+/* ── KEYFRAMES ── */
+@keyframes flyFromLeft {
+  from { opacity:0; transform:translateX(-140px) translateY(20px) rotate(-2deg); filter:blur(8px); }
+  to { opacity:1; transform:translateX(0) translateY(0) rotate(0); filter:blur(0); }
+}
+@keyframes flyFromRight {
+  from { opacity:0; transform:translateX(140px) translateY(20px) rotate(2deg); filter:blur(8px); }
+  to { opacity:1; transform:translateX(0) translateY(0) rotate(0); filter:blur(0); }
+}
+@keyframes fadeRise {
+  from { opacity:0; transform:translateY(50px); filter:blur(6px); }
+  to { opacity:1; transform:translateY(0); filter:blur(0); }
+}
+@keyframes slideFromBottom {
+  from { opacity:0; transform:translateY(80px) scaleY(0.7); filter:blur(6px); }
+  to { opacity:1; transform:translateY(0) scaleY(1); filter:blur(0); }
+}
+@keyframes heroZoomIn {
+  0% { opacity:0; transform:scale(0.4) translateY(40px); filter:blur(16px); }
+  50% { opacity:1; filter:blur(3px); }
+  100% { opacity:1; transform:scale(1) translateY(0); filter:blur(0); }
+}
+@keyframes spinIn {
+  from { opacity:0; transform:scale(0.4) rotate(-20deg); filter:blur(8px); }
+  to { opacity:1; transform:scale(1) rotate(0deg); filter:blur(0); }
+}
+@keyframes typeIn {
+  from { opacity:0; transform:translateX(-30px); clip-path:inset(0 100% 0 0); filter:blur(4px); }
+  to { opacity:1; transform:translateX(0); clip-path:inset(0 0 0 0); filter:blur(0); }
+}
+@keyframes dropIn {
+  from { opacity:0; transform:translateY(-40px) scale(0.85); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes popIn {
+  0% { opacity:0; transform:scale(0.2); filter:blur(10px); }
+  60% { transform:scale(1.2); filter:blur(0); }
+  100% { opacity:1; transform:scale(1); filter:blur(0); }
+}
+@keyframes glitchIn {
+  0% { opacity:0; transform:translateX(-8px) skewX(-12deg); filter:blur(6px); }
+  25% { opacity:0.6; transform:translateX(5px) skewX(6deg); filter:blur(2px); }
+  50% { opacity:0.8; transform:translateX(-3px) skewX(-3deg); }
+  75% { opacity:0.95; transform:translateX(1px) skewX(1deg); }
+  100% { opacity:1; transform:translateX(0) skewX(0); filter:blur(0); }
+}
+@keyframes flyOutLeft { to { opacity:0; transform:translateX(-120px) translateY(50px) rotate(-3deg); filter:blur(8px); } }
+@keyframes flyOutRight { to { opacity:0; transform:translateX(120px) translateY(50px) rotate(3deg); filter:blur(8px); } }
+@keyframes fadeDown { to { opacity:0; transform:translateY(60px); filter:blur(6px); } }
+@keyframes scatterOut {
+  to { opacity:0; transform:translate(var(--sx,30px),var(--sy,60px)) scale(0.8) rotate(var(--sr,3deg)); filter:blur(7px); }
+}
+@keyframes glitchOut {
+  0% { opacity:1; }
+  25% { opacity:0.6; transform:translateX(5px) skewX(6deg); }
+  50% { opacity:0.3; transform:translateX(-8px) skewX(-10deg); filter:blur(3px); }
+  100% { opacity:0; transform:translateX(10px) skewX(14deg); filter:blur(8px); }
+}
+.container { max-width: 1100px; width: 100%; margin: 0 auto; }
+
+/* CONTROLS */
+.slide-controls {
+  position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 100;
+  display: flex; align-items: center; gap: 1rem;
+  background: rgba(14,14,14,0.95); backdrop-filter: blur(16px);
+  border: 1px solid var(--border); border-radius: 999px; padding: 0.4rem 1rem;
+}
+.slide-controls button {
+  background: none; border: none; color: var(--text-muted); cursor: pointer;
+  font-size: 1rem; padding: 0.3rem 0.5rem; border-radius: 6px;
+  transition: all 0.2s; font-family: var(--mono);
+}
+.slide-controls button:hover { color: var(--accent); background: rgba(255,255,255,0.03); }
+.slide-counter { font-family: var(--mono); font-size: 0.7rem; font-weight: 500; color: var(--text-dim); min-width: 4rem; text-align: center; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); z-index: 100; transition: width 0.4s ease; }
+
+/* ASCII ART ELEMENTS */
+.ascii-art {
+  font-family: var(--mono); color: var(--accent); font-size: 0.65rem; line-height: 1.3;
+  white-space: pre; letter-spacing: 0; user-select: none; opacity: 0.85;
+}
+.ascii-art.accent { color: var(--accent); opacity: 0.8; }
+.ascii-art.gold { color: var(--gold); opacity: 0.7; }
+.ascii-art.bright { opacity: 1; color: var(--accent); }
+.ascii-divider {
+  font-family: var(--mono); color: var(--accent); font-size: 0.6rem;
+  letter-spacing: 0.15em; opacity: 0.6; margin: 1.5rem 0; user-select: none;
+}
+.ascii-border {
+  font-family: var(--mono); font-size: 0.55rem; color: var(--accent);
+  opacity: 0.5; line-height: 1.2; white-space: pre; user-select: none;
+}
+.ascii-label {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.2em; text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* HERO */
+.slide.hero-slide { overflow: hidden; }
+.hero-content { position: relative; z-index: 1; }
+.hero-title {
+  font-family: 'Instrument Serif', serif; font-size: clamp(3.5rem, 8vw, 6rem);
+  font-weight: 400; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 1.5rem;
+}
+.hero-title em { font-style: italic; color: var(--accent); }
+.hero-sub { font-size: 1.15rem; color: var(--text-muted); max-width: 550px; line-height: 1.7; margin-bottom: 2rem; }
+.hero-meta { display: flex; gap: 1.5rem; align-items: center; color: var(--text-dim); font-size: 0.8rem; font-family: var(--mono); }
+.hero-ascii-bg {
+  position: absolute; top: 50%; right: -2rem; transform: translateY(-50%);
+  font-family: var(--mono); font-size: 0.5rem; line-height: 1.15; color: var(--text-dim);
+  opacity: 0.08; white-space: pre; pointer-events: none; user-select: none;
+}
+
+/* BIO */
+.bio-layout { display: grid; grid-template-columns: auto 1fr; gap: 2.5rem; align-items: start; }
+.bio-photo { width: 180px; height: 180px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.bio-photo img { width: 100%; height: 100%; object-fit: cover; }
+.bio-name { font-family: 'Instrument Serif', serif; font-size: 2.2rem; font-weight: 400; margin-bottom: 0.15rem; }
+.bio-title-text { font-family: var(--mono); font-size: 0.75rem; font-weight: 500; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 1.25rem; }
+.bio-bullets { list-style: none; padding: 0; }
+.bio-bullets li {
+  font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;
+  padding: 0.4rem 0; padding-left: 1.5rem; position: relative;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.bio-bullets li::before { content: '>\A0'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); font-weight: 700; font-size: 0.8rem; }
+
+/* SECTION HEADERS */
+.section-label {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 0.75rem; opacity: 1;
+}
+.section-title {
+  font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 0.75rem;
+}
+.section-title em { font-style: italic; color: var(--gold); }
+.section-intro { font-size: 1rem; color: var(--text-muted); max-width: 650px; line-height: 1.7; margin-bottom: 2rem; }
+
+/* CARDS */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+.card-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.card-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.card-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.5rem; transition: all 0.3s ease; overflow: hidden; position: relative;
+}
+.card:hover { border-color: #2a2a2a; transform: translateY(-1px); }
+.card-ascii-icon {
+  font-family: var(--mono); font-size: 0.55rem; line-height: 1.15; color: var(--accent);
+  white-space: pre; margin-bottom: 1rem; opacity: 0.85;
+}
+.card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+.card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }
+.card-stat {
+  font-family: var(--mono); font-size: 2.5rem; font-weight: 700;
+  color: var(--accent); margin-bottom: 0.4rem; text-align: center;
+}
+.card-bullets { list-style: none; padding: 0; margin: 0; }
+.card-bullets li {
+  font-size: 0.8rem; color: var(--text-muted); line-height: 1.45;
+  padding: 0.25rem 0; padding-left: 1.25rem; position: relative;
+}
+.card-bullets li::before {
+  content: '|>'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono);
+  font-weight: 700; font-size: 0.6rem; opacity: 0.7;
+}
+
+/* QUOTE */
+.quote-block {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 2rem 2rem 2rem 2.5rem; position: relative; margin: 1.5rem 0;
+}
+.quote-block::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--accent); border-radius: 2px;
+}
+.quote-block blockquote {
+  font-family: 'Instrument Serif', serif; font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-style: italic; line-height: 1.5;
+}
+
+/* THERAPY LIST */
+.therapy-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.25rem 2rem; margin-top: 1.5rem; }
+.therapy-item {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-size: 0.9rem; color: var(--text-muted);
+}
+.therapy-item .t-icon { font-family: var(--mono); color: var(--accent); font-size: 0.75rem; font-weight: 700; flex-shrink: 0; opacity: 0.9; }
+.therapy-item span { font-family: 'Space Grotesk', sans-serif; font-weight: 500; color: var(--text); font-size: 0.85rem; }
+
+/* PATHS */
+.paths-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.path-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.75rem; position: relative; overflow: hidden; transition: all 0.3s ease;
+}
+.path-card:hover { border-color: #2a2a2a; transform: translateY(-1px); }
+.path-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.path-card:nth-child(1)::before { background: var(--text-muted); }
+.path-card:nth-child(2)::before { background: var(--gold); }
+.path-card .path-label { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.75rem; }
+.path-card h3 { font-family: 'Instrument Serif', serif; font-size: 1.4rem; font-weight: 400; margin-bottom: 0.6rem; }
+.path-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1.25rem; }
+.path-card .path-question { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 0.9rem; color: var(--gold); padding-top: 0.75rem; border-top: 1px solid var(--border); }
+
+/* FUTURES */
+.futures-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.future-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.5rem; transition: all 0.3s ease;
+}
+.future-card:hover { border-color: #2a2a2a; transform: translateY(-1px); }
+.future-card .future-num { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; opacity: 0.9; }
+.future-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600; margin-bottom: 0.35rem; }
+.future-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }
+
+/* CLOSING */
+.closing-title {
+  font-family: 'Instrument Serif', serif; font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 1rem; text-align: center;
+}
+.closing-title em { font-style: italic; color: var(--gold); display: block; }
+.closing-meta { margin-top: 2rem; font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim); text-align: center; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .slide { padding: 2rem 1.25rem; }
+  .paths-grid, .card-grid.cols-3, .card-grid.cols-4, .card-grid.cols-2, .futures-grid { grid-template-columns: 1fr; }
+  .therapy-list { grid-template-columns: 1fr; }
+  .bio-layout { grid-template-columns: 1fr; }
+  .bio-photo { width: 120px; height: 120px; }
+  .hero-ascii-bg { display: none; }
+  .ascii-art { font-size: 0.5rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="deck" id="deck">
+
+  <!-- 01: TITLE -->
+  <div class="slide hero-slide active" data-slide="0">
+    <div class="container hero-content">
+      <h1 class="hero-title">Staring Into<br><em>the Abyss</em></h1>
+      <p class="hero-sub">AI, therapy, and the search for presence — in a world changing faster than we can track.</p>
+      <div class="ascii-divider">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+      <div class="hero-meta">
+        <span>Minh Do</span>
+        <span>//</span>
+        <span>Machine Cinema</span>
+        <span>//</span>
+        <span>2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02: BIO -->
+  <div class="slide" data-slide="1">
+    <div class="container">
+<pre class="ascii-art accent" style="margin-bottom:1rem;">
++--[ SPEAKER ]--------------------------------------------+
+|                                                          |
+</pre>
+      <div class="bio-layout">
+        <div class="bio-photo">
+          <img src="https://minhdo.com/wp-content/uploads/2025/03/Profile-Photo.jpg" alt="Minh Do">
+        </div>
+        <div>
+          <div class="bio-name">Minh Do</div>
+          <div class="bio-title-text">Co-Founder & CEO, Machine Cinema</div>
+          <ul class="bio-bullets">
+            <li>Entrepreneur, filmmaker, educator — intersection of AI, storytelling, culture</li>
+            <li>Machine Cinema — global collective for generative AI in film & visual storytelling</li>
+            <li>Fantastic Day — hybrid AI studio for musicians, brands, filmmakers</li>
+            <li>Co-founder, Vietcetera — digital media platform for business, culture, society in Vietnam</li>
+            <li>Former EIC at Tech in Asia</li>
+            <li>Creator programs: Google Labs, OpenAI, Pika, Luma, ByteDance, Flora, Weavy, Krea</li>
+            <li>Zen Buddhism — meditation and scholarship</li>
+          </ul>
+        </div>
+      </div>
+<pre class="ascii-art accent" style="margin-top:1rem;">
+|                                                          |
++----------------------------------------------------------+
+</pre>
+    </div>
+  </div>
+
+  <!-- 04: THE WHIRLWIND -->
+  <div class="slide" data-slide="2">
+    <div class="container">
+      <div class="section-label">// 04 — THE WHIRLWIND</div>
+      <h2 class="section-title">The pace is <em>relentless</em></h2>
+<pre class="ascii-divider">╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌</pre>
+      <div class="quote-block" style="margin-top:0.5rem;">
+        <blockquote>The breakneck pace of AI progress challenges us to refine what it means to be human — and not get caught up in the noise.</blockquote>
+      </div>
+      <div class="card-grid" style="margin-top:1rem;">
+        <div class="card">
+<pre class="card-ascii-icon">
+ .  *  .  *
+  * .  * .
+ .  *  .  *
+</pre>
+          <h3>What's real?</h3>
+          <ul class="card-bullets">
+            <li>New model, new benchmark, new existential claim — every week</li>
+            <li>Signal-to-noise ratio is collapsing</li>
+            <li>Misinformation and disinformation accelerating at scale</li>
+          </ul>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  /\    /\
+ /  \  /  \
+/    \/    \
+\    /\    /
+ \  /  \  /
+  \/    \/
+</pre>
+          <h3>What's at stake?</h3>
+          <ul class="card-bullets">
+            <li>Our identity and sense of purpose</li>
+            <li>What is originality, creativity, and what makes us essentially human?</li>
+            <li>The things we thought were uniquely human — replicated</li>
+          </ul>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+ >>>  >>>  >>>
+  >>> >>>  >>>
+ >>>  >>>  >>>
+  >>> >>>  >>>
+</pre>
+          <h3>Parallelization & Tokenmaxxing</h3>
+          <ul class="card-bullets">
+            <li>Running multiple AI agents simultaneously</li>
+            <li>Squeezing maximum output from every token</li>
+            <li>Cognitive arms race — throughput over understanding</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05: MENTAL HEALTH CRISIS -->
+  <div class="slide" data-slide="3">
+    <div class="container">
+      <div class="section-label">// 05 — THE MENTAL HEALTH CRISIS</div>
+      <h2 class="section-title">We are already <em>unwell</em></h2>
+<pre class="ascii-art accent" style="margin-bottom:1rem;">
+    ___________
+   /  WARNING  \
+  /  =========  \
+ |   SYSTEM IN   |
+ |   DISTRESS    |
+  \  =========  /
+   \___________/
+</pre>
+      <div class="card-grid cols-4">
+        <div class="card">
+<pre class="card-ascii-icon">
+  &lt;3 --x
+  /    \
+ broken
+</pre>
+          <h3>Our algorithmic existence</h3>
+          <ul class="card-bullets">
+            <li>Dating apps commodified intimacy</li>
+            <li>Sex & partnership rates falling globally</li>
+            <li>Less baby-making, more screen time</li>
+            <li>Loneliness as the default state</li>
+          </ul>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  [         ]
+  [         ]
+  [  empty  ]
+  [         ]
+</pre>
+          <h3>The rise of loneliness</h3>
+          <ul class="card-bullets">
+            <li>Surgeon General: public health crisis</li>
+            <li>Health risk = 15 cigarettes/day</li>
+            <li>Social isolation at epidemic scale</li>
+          </ul>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  ~^~v~^~v~
+  WHIPLASH
+  ~v~^~v~^~
+</pre>
+          <h3>Whiplash</h3>
+          <ul class="card-bullets">
+            <li>AI users are in an extreme bubble</li>
+            <li>Gap between fluent & everyone else: widening</li>
+            <li>Two realities diverging fast</li>
+          </ul>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  .(    ).
+ (  ?!?  )
+  '(  ).'
+   ERROR
+</pre>
+          <h3>AI psychosis potential</h3>
+          <ul class="card-bullets">
+            <li>Deep AI bonds blur real vs. synthetic</li>
+            <li>Identity dissolution & parasocial dependency</li>
+            <li>No protocol exists for this</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06: THERAPY DILEMMA -->
+  <div class="slide" data-slide="4">
+    <div class="container">
+      <div class="section-label">// 06 — THE THERAPY DILEMMA</div>
+      <h2 class="section-title">We need inner work more than ever —<br>and have <em>fewer ways</em> to do it at scale</h2>
+<pre class="ascii-divider">
+┌──────────────────────────────────────────────────────────┐
+│  BARRIERS TO INNER TRANSFORMATION                        │
+├──────────────────────────────────────────────────────────┤</pre>
+      <div class="therapy-list" style="margin-top:0.5rem;">
+        <div class="therapy-item"><div class="t-icon">[~]</div><span>Training therapists takes years — demand outstrips supply</span></div>
+        <div class="therapy-item"><div class="t-icon">[?]</div><span>Finding the right therapist is trial-and-error</span></div>
+        <div class="therapy-item"><div class="t-icon">[$]</div><span>Therapy is unaffordable for most of the world</span></div>
+        <div class="therapy-item"><div class="t-icon">[x]</div><span>Most cultures discourage introspection and therapy</span></div>
+        <div class="therapy-item"><div class="t-icon">[!]</div><span>Men are far less likely to seek therapy</span></div>
+        <div class="therapy-item"><div class="t-icon">[*]</div><span>Psychedelics: promising but dangerous & unscalable</span></div>
+        <div class="therapy-item"><div class="t-icon">[%]</div><span>AI psychosis: emerging risk, no protocol</span></div>
+        <div class="therapy-item"><div class="t-icon">[.]</div><span>Meditation also doesn't scale</span></div>
+      </div>
+<pre class="ascii-divider" style="margin-top:0.5rem;">
+└──────────────────────────────────────────────────────────┘</pre>
+      <div class="quote-block" style="margin-top:1rem;">
+        <blockquote>The tools we have for inner transformation don't match the scale of the crisis ahead.</blockquote>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07: THE QUESTION -->
+  <div class="slide" data-slide="5">
+    <div class="container" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+<pre class="ascii-art accent" style="text-align:center; margin-bottom:2.5rem;">
+  HUMAN &lt;─────────?─────────&gt; AI
+</pre>
+      <h2 class="section-title" style="text-align:center;">Today, do you talk more to humans<br>than AI — or more to AI <em>than humans?</em><br><br>How long will that ratio <em>stay that way?</em></h2>
+    </div>
+  </div>
+
+  <!-- 08: AI AS THERAPIST -->
+  <div class="slide" data-slide="6">
+    <div class="container">
+      <div class="section-label">// 08 — THE UNLIKELY THERAPIST</div>
+      <h2 class="section-title">For better <em>and</em> worse, AI may be the best therapist<br>most people <em>will ever have</em></h2>
+<pre class="ascii-divider">╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌</pre>
+      <div class="card-grid cols-3" style="margin-top:1rem;">
+        <div class="card" style="text-align:center;">
+<pre class="ascii-art accent" style="text-align:center; margin-bottom:0.5rem; opacity:0.8;">
+  ┌─────┐
+  │ 24  │
+  │ /7  │
+  └─────┘
+</pre>
+          <div class="card-stat">24/7</div>
+          <p>Always available. Infinitely patient. No waiting room.</p>
+        </div>
+        <div class="card" style="text-align:center;">
+<pre class="ascii-art accent" style="text-align:center; margin-bottom:0.5rem; opacity:0.8;">
+  ─── ∞ ───
+  ───   ───
+  ─── ∞ ───
+</pre>
+          <div class="card-stat">&#x221E;</div>
+          <p>Speaks your language. Meets you where you are. At 3am if needed.</p>
+        </div>
+        <div class="card" style="text-align:center;">
+<pre class="ascii-art accent" style="text-align:center; margin-bottom:0.5rem; opacity:0.8;">
+  ╔═══════╗
+  ║  $0   ║
+  ║ FREE  ║
+  ╚═══════╝
+</pre>
+          <div class="card-stat">$0</div>
+          <p>No stigma. No cultural barrier. No shame.</p>
+        </div>
+      </div>
+      <div class="quote-block">
+        <blockquote>The irony of AI solving the problem that technology created.</blockquote>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09: AGI vs AWAKENED AI -->
+  <div class="slide" data-slide="7">
+    <div class="container">
+      <div class="section-label">// 09 — THE QUESTION</div>
+      <h2 class="section-title">The drive is toward AGI.<br>But what would an <em>awakened</em> AI look like?</h2>
+<pre class="ascii-art accent" style="margin:1rem 0; text-align:center;">
+     AGI                          AWAKENED
+      |                              |
+ intelligence               intelligence
+    speed                      + wisdom
+    scale                      + empathy
+  benchmarks                   + presence
+      |                              |
+      v                              v
+   POWER ──────── ? ────────── PURPOSE
+</pre>
+      <div class="paths-grid">
+        <div class="path-card">
+          <div class="path-label">// THE CURRENT TRAJECTORY</div>
+          <h3>AGI</h3>
+          <p>Build systems that are smarter, faster, more capable. Optimize for benchmarks, scale, general-purpose reasoning. Intelligence alone will solve our problems.</p>
+          <div class="path-question">Intelligence without wisdom is just power — and power without direction is chaos.</div>
+        </div>
+        <div class="path-card">
+          <div class="path-label">// THE DEEPER QUESTION</div>
+          <h3>Awakened AI</h3>
+          <p>Not just intelligence but wisdom. Genuine empathy, integrated understanding, presence. The depth of a master, not just a model. AI that helps us see ourselves more clearly.</p>
+          <div class="path-question">Can a machine have the depth of a sage? And if so — what would we need to teach it?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10: THE APPROACH -->
+  <div class="slide" data-slide="8">
+    <div class="container">
+      <div class="section-label">// 10 — THE APPROACH</div>
+      <h2 class="section-title">How should we <em>approach</em> this world?</h2>
+      <p class="section-intro">Straddling and breaking dichotomies.</p>
+<pre class="ascii-divider">╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌</pre>
+      <div class="card-grid" style="margin-top:1rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem;">
+        <div class="card">
+<pre class="card-ascii-icon">
+    _/\_
+   ( oo )
+    \  /
+    CALM
+</pre>
+          <h3>Meditation & Presence</h3>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+ \o/ \o/ \o/
+  |   |   |
+ / \ / \ / \
+  hi  hi  hi
+</pre>
+          <h3>Community & Human Touch</h3>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  v1.0 [x]
+  v2.0 [x]
+  v3.0 [?]
+  ──────────
+  $ sudo update self
+</pre>
+          <h3>Re-evaluate yourself before you are forced to</h3>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  "AI can't ___"
+       |
+    ___v___
+   | OOPS  |
+   |_______|
+</pre>
+          <h3>Don't be precious about what you think AI cannot do</h3>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  brain: ██░░░░
+  token: ██████
+     ↑
+   fix this
+</pre>
+          <h3>Neural efficiency alongside token efficiency</h3>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+    ~  ~  ~
+   ( play )
+    ~ _ ~ _
+   ( ?!? )
+    ~  ~  ~
+</pre>
+          <h3>Boredom & play</h3>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  YOU ──→ [a]
+    ↑       |
+    └─ AI ──┘
+   who chose?
+</pre>
+          <h3>Redefining agency in the midst of AI hacking our agency</h3>
+        </div>
+      </div>
+      <div class="quote-block" style="margin-top:1.5rem;">
+        <blockquote>"We both looked into the abyss, but when it looked back at us, you blinked."</blockquote>
+      </div>
+      <div style="font-family:var(--mono); font-size:0.65rem; color:var(--text-dim); letter-spacing:0.1em; margin-top:0.5rem; text-align:right;">— BATMAN</div>
+    </div>
+  </div>
+
+  <!-- 11: AI RELIGIONS -->
+  <div class="slide" data-slide="9">
+    <div class="container">
+      <div class="section-label">// 11 — THE INEVITABLE</div>
+      <h2 class="section-title">The rise of <em>(AI) religions</em></h2>
+      <p class="section-intro">AI gives us even more questions about the future — so where are the answers?</p>
+<pre class="ascii-art gold" style="margin:0.25rem 0 1rem; text-align:center;">
+    /\  SYNTHETIC  /\
+   /||\  THEOLOGY /||\
+  /||||\\________/||||\ </pre>
+      <div class="card">
+<pre class="card-ascii-icon">
+  .*. prophecy .*.
+  :   from     :
+  :   psychosis:
+  '·._________.·'
+</pre>
+        <h3>From psychosis to prophecy</h3>
+        <ul class="card-bullets">
+          <li>AI companions already serve as confessors, oracles, guides</li>
+          <li>Attributed consciousness → religious structures follow</li>
+          <li>New technologies have always birthed new religions</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12: THE DESIGN BRIEF -->
+  <div class="slide" data-slide="10">
+    <div class="container" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+<pre class="ascii-art accent" style="text-align:center; margin-bottom:2rem;">
+  ┌─────────────────────────────────────────┐
+  │                                         │
+  │   The meaning crisis isn't a bug.       │
+  │                                         │
+  │   It's a ██████ ████████.               │
+  │         design   brief                  │
+  │                                         │
+  └─────────────────────────────────────────┘
+</pre>
+      <h2 class="section-title" style="text-align:center;">If new belief systems are inevitable,<br>the question isn't how to <em>prevent</em> them —<br>it's who gets to <em>design</em> them.</h2>
+<pre class="ascii-divider" style="text-align:center;">╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌</pre>
+      <p class="section-intro" style="text-align:center; margin-left:auto; margin-right:auto; margin-top:1rem;">We can leave it to algorithms, defaults, and accident. Or we can treat it as the most important design problem of our time — and bring every philosophical tradition we have to bear on it.</p>
+    </div>
+  </div>
+
+  <!-- 13: WE'RE ALREADY HERE -->
+  <div class="slide" data-slide="11">
+    <div class="container">
+      <div class="section-label">// 13 — THE SHIFT IS ALREADY HAPPENING</div>
+      <h2 class="section-title">We are already in the beginnings<br>of <em>hopecore</em></h2>
+<pre class="ascii-art accent" style="margin:1rem 0 1.5rem;">
+  DYSTOPIA FATIGUE
+  ================
+
+  2015 ████████████████████████████████████ peak doom
+  2018 ██████████████████████████████░░░░░░
+  2021 ████████████████████░░░░░░░░░░░░░░░
+  2024 ████████████░░░░░░░░░░░░░░░░░░░░░░░ fatigue sets in
+  2026 ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ appetite for hope
+       ↑                                  ↑
+     exhaustion                      new demand
+</pre>
+      <div class="card-grid cols-2" style="margin-top:1rem;">
+        <div class="card">
+<pre class="card-ascii-icon">
+ REALITY > FICTION
+ ═════════════════
+ speed: ████████░░
+ weird: █████████░
+ scope: ██████████
+</pre>
+          <h3>The world is outpacing science fiction</h3>
+          <ul class="card-bullets">
+            <li>Reality is becoming sci-fi faster than sci-fi can write about it</li>
+            <li>The genre of dystopia has been overtaken by the news cycle</li>
+            <li>Speculative fiction's new job: imagining what goes <em>right</em></li>
+          </ul>
+        </div>
+        <div class="card">
+<pre class="card-ascii-icon">
+  ─── tide ───
+  ~~~ turn ~~~
+  ─── tide ───
+  ~~~ turn ~~~
+</pre>
+          <h3>Dystopia fatigue is real</h3>
+          <ul class="card-bullets">
+            <li>People are exhausted by doomscrolling and collapse narratives</li>
+            <li>There's a growing hunger for visions of flourishing</li>
+            <li>Hopecore isn't naive — it's strategic and necessary</li>
+            <li>The optimists will build the future; the pessimists will comment on it</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14: HOPECORE -->
+  <div class="slide" data-slide="12">
+    <div class="container">
+      <div class="section-label">// 14 — HOPECORE</div>
+      <h2 class="section-title">What does a <em>good</em> AI future look like?</h2>
+<pre class="ascii-art accent" style="margin-bottom:1.5rem;">
+  ╔══════════════════════════════════════════════════════╗
+  ║  >>> CALL TO ACTION                                  ║
+  ║                                                      ║
+  ║  We need a DIVERSITY of philosophies converging       ║
+  ║  on this question. Not one answer — many traditions,  ║
+  ║  many lenses, one shared urgency.                     ║
+  ║                                                      ║
+  ╚══════════════════════════════════════════════════════╝
+</pre>
+      <div class="futures-grid">
+        <div class="future-card">
+          <div class="future-num">// FRAMEWORK.01</div>
+          <h3>Planetary Computation</h3>
+          <p>Bratton: AI as planetary-scale infrastructure reorganizing governance, ecology, identity beyond the nation-state.</p>
+        </div>
+        <div class="future-card">
+          <div class="future-num">// FRAMEWORK.02</div>
+          <h3>Xenofeminism</h3>
+          <p>Laboria Cuboniks: technology as emancipatory. If nature is unjust, change nature. Radical universalism.</p>
+        </div>
+        <div class="future-card">
+          <div class="future-num">// FRAMEWORK.03</div>
+          <h3>Left Accelerationism</h3>
+          <p>Srnicek & Williams: repurpose technology for liberation. Post-work future. Automation for collective flourishing.</p>
+        </div>
+        <div class="future-card">
+          <div class="future-num">// FRAMEWORK.04</div>
+          <h3>Awakened Technology</h3>
+          <p>Not control or acceleration — wisdom. AI that helps humanity develop presence and compassion.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15: CLOSING -->
+  <div class="slide" data-slide="13">
+    <div class="container" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+<pre class="ascii-art accent" style="text-align:center; margin-bottom:2.5rem;">
+  ┌────────────────────────────────────────┐
+  │                                        │
+  │   >>> BUILD WHAT'S MISSING <<<         │
+  │                                        │
+  └────────────────────────────────────────┘
+</pre>
+      <div class="quote-block" style="max-width:700px; margin:0;">
+        <blockquote>"Live in the future and build what's missing."</blockquote>
+      </div>
+      <div style="font-family:var(--mono); font-size:0.7rem; color:var(--text-dim); letter-spacing:0.1em; margin-top:1.5rem;">— PAUL GRAHAM</div>
+<pre class="ascii-divider" style="margin-top:2rem;">- - - - - - - - - - - - - - - - - -</pre>
+      <div class="closing-meta">
+        <span style="color:var(--text-muted);">Minh Do</span> &middot; Machine Cinema
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="slide-controls">
+  <button id="prevBtn" aria-label="Previous slide">&larr;</button>
+  <div class="slide-counter" id="slideCounter">1 / 14</div>
+  <button id="nextBtn" aria-label="Next slide">&rarr;</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+  const slides=document.querySelectorAll('.slide'),total=slides.length;
+  let current=0,targetSlide=0;
+  const counter=document.getElementById('slideCounter'),progress=document.getElementById('progressBar');
+  function goTo(n){if(n<0||n>=total)return;slides[current].classList.remove('active');slides[current].classList.add('prev');current=n;targetSlide=n;slides.forEach((s,i)=>{s.classList.remove('active','prev');if(i===current)s.classList.add('active')});counter.textContent=(current+1)+' / '+total;progress.style.width=((current/(total-1))*100)+'%'}
+  function next(){goTo(current+1)}function prev(){goTo(current-1)}
+  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();prev()}});
+  document.getElementById('nextBtn').addEventListener('click',next);document.getElementById('prevBtn').addEventListener('click',prev);
+  document.getElementById('deck').addEventListener('click',e=>{if(e.target.closest('.slide-controls, a, button'))return;if(e.clientX<window.innerWidth*0.35)prev();else if(e.clientX>window.innerWidth*0.65)next()});
+  let touchStartX=0;document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX});document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-touchStartX;if(Math.abs(dx)>50){dx<0?next():prev()}});
+  goTo(0);
+
+  // ── THREE.JS ──
+  const canvas=document.getElementById('bgCanvas');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  const scene=new THREE.Scene();
+  scene.fog=new THREE.FogExp2(0x0a0a0a,0.003);
+  const camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,2000);
+  camera.position.set(0,5,40);
+
+  const ORANGE=0xf97316,GOLD=0xd4a84b,WARM=0xffa94d,DEEP=0xc2410c,PALE=0xfed7aa,WHITE=0xffffff,BRIGHT=0xfb923c;
+  const gradientMats=[];
+  const floatingObjects=[];
+
+  function lineMat(c,o){return new THREE.LineBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false})}
+  function solidMat(c,o){return new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,side:THREE.DoubleSide,depthWrite:false})}
+  function gradMat(c1,c2,o){
+    const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,
+      uniforms:{color1:{value:new THREE.Color(c1)},color2:{value:new THREE.Color(c2)},opacity:{value:o},time:{value:0}},
+      vertexShader:`varying vec3 vPos;void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`uniform vec3 color1;uniform vec3 color2;uniform float opacity;uniform float time;varying vec3 vPos;
+        void main(){float t=clamp((vPos.x+60.0)/120.0,0.0,1.0);float sh=sin(vPos.x*0.3+vPos.z*0.2+time*0.5)*0.2+0.9;
+        vec3 col=mix(color1,color2,t);gl_FragColor=vec4(col*sh,opacity*sh);}`
+    });gradientMats.push(m);return m;
+  }
+
+  function smoothLine(y,z,amp,freq,seg,w){
+    const p=[];for(let i=0;i<=seg;i++){const t=i/seg;const x=(t-0.5)*w;
+    p.push(new THREE.Vector3(x,y+Math.sin(t*Math.PI*freq)*amp+Math.sin(t*Math.PI*freq*2.3)*amp*0.3,z))}
+    return new THREE.CatmullRomCurve3(p).getPoints(seg*2);
+  }
+
+  // ═══════════════════════════════════════
+  // LAYER 1: LAKE & HORIZON (slides 0-1)
+  // ═══════════════════════════════════════
+  const L1=new THREE.Group();
+
+  // Dense water grid — 40 rows
+  for(let r=0;r<40;r++){
+    const z=-35+r*2;const o=0.08+(r/40)*0.18;
+    L1.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(smoothLine(0,z,0.12+r*0.015,1.5+r*0.08,80,180)),gradMat(DEEP,GOLD,o)));
+  }
+  // Mountain silhouettes — 6 layers with fills
+  for(let l=0;l<6;l++){
+    const z=-45-l*6,h=5+l*4,o=0.15+l*0.07;
+    const p=[];for(let i=0;i<=120;i++){const t=i/120;const x=(t-0.5)*200;
+    const y=Math.abs(Math.sin(t*Math.PI*3+l*1.2))*h+Math.sin(t*Math.PI*7+l)*h*0.25+Math.sin(t*Math.PI*11)*h*0.1;
+    p.push(new THREE.Vector3(x,Math.max(y,0),z))}
+    const c=new THREE.CatmullRomCurve3(p).getPoints(240);
+    L1.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c),gradMat(DEEP,ORANGE,o)));
+    // Filled contour below — solid triangles for depth
+    if(l%2===0){const shape=new THREE.Shape();
+      c.forEach((pt,i)=>{i===0?shape.moveTo(pt.x,pt.y):shape.lineTo(pt.x,pt.y)});
+      shape.lineTo(c[c.length-1].x,-2);shape.lineTo(c[0].x,-2);
+      const sGeo=new THREE.ShapeGeometry(shape);
+      const sMesh=new THREE.Mesh(sGeo,solidMat(DEEP,0.03+l*0.01));
+      sMesh.position.z=z;L1.add(sMesh);
+    }
+  }
+  // Bright horizon glow — multiple lines
+  for(let i=0;i<3;i++){
+    L1.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(smoothLine(0.3+i*0.2,-55-i*2,0.15,0.4,100,220)),lineMat(i===0?BRIGHT:ORANGE,0.35-i*0.08)));
+  }
+  // Floating contour orbs near water
+  for(let i=0;i<8;i++){
+    const g=new THREE.SphereGeometry(0.5+Math.random()*0.8,12,8);
+    const m=new THREE.Mesh(g,solidMat(ORANGE,0.06+Math.random()*0.06));
+    m.position.set((Math.random()-0.5)*60,1+Math.random()*3,-5-Math.random()*15);
+    L1.add(m);floatingObjects.push({obj:m,speed:0.3+Math.random()*0.5,amp:0.5+Math.random()});
+    // Wire outline
+    L1.add(new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(GOLD,0.15)).copy(m,false));
+    const w=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(GOLD,0.2));
+    w.position.copy(m.position);L1.add(w);
+  }
+  // Firefly particles
+  for(let i=0;i<30;i++){
+    const g=new THREE.SphereGeometry(0.08,4,4);
+    const ff=new THREE.Mesh(g,solidMat(WARM,0.4+Math.random()*0.4));
+    ff.position.set((Math.random()-0.5)*80,0.5+Math.random()*6,(Math.random()-0.5)*40);
+    L1.add(ff);floatingObjects.push({obj:ff,speed:0.5+Math.random(),amp:1+Math.random()*2,phase:Math.random()*10});
+  }
+  scene.add(L1);
+
+  // ═══════════════════════════════════════
+  // LAYER 2: CLOUDS & PEAKS (slides 2-4)
+  // ═══════════════════════════════════════
+  const L2=new THREE.Group();L2.position.y=80;
+  // Dense rolling peaks
+  for(let l=0;l<8;l++){
+    const z=-25-l*5,h=8+l*5;
+    const p=[];for(let i=0;i<=100;i++){const t=i/100;const x=(t-0.5)*160;
+    const y=Math.pow(Math.abs(Math.sin(t*Math.PI*2.5+l*0.8)),1.3)*h+Math.sin(t*Math.PI*5+l*2)*h*0.2;
+    p.push(new THREE.Vector3(x,y,z))}
+    const c=new THREE.CatmullRomCurve3(p).getPoints(200);
+    L2.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c),gradMat(DEEP,WARM,0.12+l*0.05)));
+  }
+  // Big cloud masses — filled ellipsoids
+  for(let i=0;i<15;i++){
+    const s=2+Math.random()*5;
+    const g=new THREE.SphereGeometry(s,16,10);
+    const cloud=new THREE.Mesh(g,solidMat(ORANGE,0.025+Math.random()*0.02));
+    cloud.scale.set(2+Math.random(),0.4+Math.random()*0.3,1);
+    cloud.position.set((Math.random()-0.5)*100,12+Math.random()*18,-10-Math.random()*30);
+    L2.add(cloud);
+    // Contour rings
+    for(let r=0;r<3;r++){
+      const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+        new THREE.EllipseCurve(0,0,s*(1.8-r*0.3),s*(0.3-r*0.05),0,Math.PI*2,false,0).getPoints(40).map(p2=>new THREE.Vector3(p2.x,p2.y,0))
+      ),lineMat(GOLD,0.08+r*0.03));
+      ring.position.copy(cloud.position);ring.position.y+=r*0.3;
+      ring.rotation.x=Math.PI*0.5;L2.add(ring);
+    }
+    floatingObjects.push({obj:cloud,speed:0.1+Math.random()*0.2,amp:0.5+Math.random(),phase:Math.random()*20});
+  }
+  // Small bright particles in clouds
+  for(let i=0;i<40;i++){
+    const g=new THREE.SphereGeometry(0.06,3,3);
+    const p=new THREE.Mesh(g,solidMat(PALE,0.3+Math.random()*0.4));
+    p.position.set((Math.random()-0.5)*80,8+Math.random()*25,-5-Math.random()*25);
+    L2.add(p);floatingObjects.push({obj:p,speed:0.3+Math.random()*0.6,amp:1+Math.random()*3,phase:Math.random()*10});
+  }
+  scene.add(L2);
+
+  // ═══════════════════════════════════════
+  // LAYER 3: UPPER ATMOSPHERE (slides 5-6)
+  // ═══════════════════════════════════════
+  const L3=new THREE.Group();L3.position.y=220;
+  // Atmospheric horizon curves — bright
+  for(let l=0;l<10;l++){
+    const y=-12-l*3.5,z=-28+l*1.5;
+    const p=[];for(let i=0;i<=100;i++){const t=i/100;
+    p.push(new THREE.Vector3((t-0.5)*200,y-Math.sin(t*Math.PI)*(6+l*1.5),z))}
+    const c=new THREE.CatmullRomCurve3(p);
+    L3.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(150)),gradMat(l<5?DEEP:ORANGE,l<5?ORANGE:GOLD,0.06+l*0.035)));
+  }
+  // Floating icosahedrons — wireframe + solid core
+  for(let i=0;i<20;i++){
+    const s=0.3+Math.random()*0.8;
+    const g=new THREE.IcosahedronGeometry(s,1);
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(GOLD,0.25+Math.random()*0.2));
+    wire.position.set((Math.random()-0.5)*80,(Math.random()-0.5)*30,(Math.random()-0.5)*35);
+    L3.add(wire);
+    // Solid inner
+    const inner=new THREE.Mesh(new THREE.IcosahedronGeometry(s*0.5,0),solidMat(ORANGE,0.08));
+    inner.position.copy(wire.position);L3.add(inner);
+    floatingObjects.push({obj:wire,speed:0.15+Math.random()*0.3,amp:1+Math.random()*2,phase:Math.random()*10,spin:true});
+  }
+  scene.add(L3);
+
+  // ═══════════════════════════════════════
+  // LAYER 4: STRATOSPHERE (slides 7-8)
+  // ═══════════════════════════════════════
+  const L4=new THREE.Group();L4.position.y=380;
+  // Earth curvature — thick bright arc + glow arcs
+  for(let a=0;a<5;a++){
+    const R=110-a*6;const p=[];
+    for(let i=0;i<=120;i++){const t=(i/120-0.5)*Math.PI*0.7;
+    p.push(new THREE.Vector3(Math.sin(t)*R,-Math.cos(t)*R+28-a*2,-38+a*1.5))}
+    const c=new THREE.CatmullRomCurve3(p);
+    L4.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(180)),a===0?gradMat(ORANGE,BRIGHT,0.35):lineMat(ORANGE,0.1+a*0.04)));
+  }
+  // Stars — bright filled circles + glow
+  for(let i=0;i<200;i++){
+    const sx=(Math.random()-0.5)*160,sy=(Math.random()-0.5)*55+15,sz=-20-Math.random()*55;
+    const ss=0.06+Math.random()*0.2;const bright=Math.random()>0.7;
+    const g=new THREE.CircleGeometry(ss,8);
+    const star=new THREE.Mesh(g,solidMat(bright?WARM:GOLD,bright?0.6:0.2+Math.random()*0.3));
+    star.position.set(sx,sy,sz);star.lookAt(camera.position);L4.add(star);
+    if(bright){// Glow halo
+      const halo=new THREE.Mesh(new THREE.CircleGeometry(ss*3,8),solidMat(ORANGE,0.04));
+      halo.position.copy(star.position);halo.lookAt(camera.position);L4.add(halo);
+    }
+  }
+  // Contour planet hint
+  const planetG=new THREE.SphereGeometry(4,20,14);
+  const planetContour=new THREE.LineSegments(new THREE.WireframeGeometry(planetG),lineMat(GOLD,0.15));
+  planetContour.position.set(-40,20,-50);L4.add(planetContour);
+  const planetFill=new THREE.Mesh(new THREE.SphereGeometry(3.8,16,12),solidMat(DEEP,0.06));
+  planetFill.position.copy(planetContour.position);L4.add(planetFill);
+  floatingObjects.push({obj:planetContour,speed:0.1,amp:0,phase:0,spin:true});
+
+  // MORE PLANETS — various sizes and colors
+  const planetConfigs=[
+    {s:6,x:50,y:30,z:-55,wc:ORANGE,fc:DEEP,wo:0.2,fo:0.08},
+    {s:3,x:-55,y:-10,z:-45,wc:GOLD,fc:0x1a1000,wo:0.18,fo:0.06},
+    {s:8,x:35,y:-25,z:-65,wc:WARM,fc:DEEP,wo:0.12,fo:0.04},
+    {s:2.5,x:-30,y:35,z:-40,wc:BRIGHT,fc:DEEP,wo:0.25,fo:0.07},
+    {s:5,x:60,y:-5,z:-60,wc:GOLD,fc:0x2a1000,wo:0.15,fo:0.05},
+  ];
+  planetConfigs.forEach(pc=>{
+    const pw=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(pc.s,2)),lineMat(pc.wc,pc.wo));
+    pw.position.set(pc.x,pc.y,pc.z);L4.add(pw);
+    const pf=new THREE.Mesh(new THREE.SphereGeometry(pc.s*0.95,14,10),solidMat(pc.fc,pc.fo));
+    pf.position.copy(pw.position);L4.add(pf);
+    // Ring for some planets
+    if(Math.random()>0.5){
+      const rPts=new THREE.EllipseCurve(0,0,pc.s*1.6,pc.s*1.6,0,Math.PI*2,false,0).getPoints(60).map(p2=>new THREE.Vector3(p2.x,p2.y,0));
+      const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(rPts),lineMat(pc.wc,pc.wo*0.5));
+      ring.position.copy(pw.position);ring.rotation.x=0.8+Math.random()*0.8;L4.add(ring);
+    }
+    floatingObjects.push({obj:pw,speed:0.05+Math.random()*0.1,amp:0,phase:0,spin:true});
+  });
+
+  // SATELLITES — cross-shaped with solar panel wings
+  for(let i=0;i<8;i++){
+    const satGroup=new THREE.Group();
+    // Body — small box
+    const body=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.BoxGeometry(0.4,0.4,0.8)),lineMat(PALE,0.35));
+    satGroup.add(body);
+    // Solar panels — two flat rectangles
+    const panelL=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-0.2,0,0),new THREE.Vector3(-1.8,0,0),
+      new THREE.Vector3(-1.8,0,0),new THREE.Vector3(-1.8,0.6,0),
+      new THREE.Vector3(-1.8,0.6,0),new THREE.Vector3(-0.2,0.6,0),
+      new THREE.Vector3(-0.2,0.6,0),new THREE.Vector3(-0.2,0,0),
+      // Cross brace
+      new THREE.Vector3(-0.2,0.3,0),new THREE.Vector3(-1.8,0.3,0),
+      new THREE.Vector3(-1.0,0,0),new THREE.Vector3(-1.0,0.6,0),
+    ]),lineMat(GOLD,0.3));
+    satGroup.add(panelL);
+    const panelR=panelL.clone();panelR.scale.x=-1;satGroup.add(panelR);
+    // Antenna
+    const ant=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0,0.2,0.4),new THREE.Vector3(0,0.8,0.7)
+    ]),lineMat(ORANGE,0.25));
+    satGroup.add(ant);
+    // Filled panel hint
+    const panelFillL=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.6),solidMat(GOLD,0.03));
+    panelFillL.position.set(-1.0,0.3,0);satGroup.add(panelFillL);
+    const panelFillR=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.6),solidMat(GOLD,0.03));
+    panelFillR.position.set(1.0,0.3,0);satGroup.add(panelFillR);
+
+    satGroup.position.set(
+      (Math.random()-0.5)*100,
+      (Math.random()-0.5)*50,
+      -10-Math.random()*40
+    );
+    satGroup.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+    satGroup.scale.setScalar(0.8+Math.random()*0.6);
+    L4.add(satGroup);
+    floatingObjects.push({obj:satGroup,speed:0.03+Math.random()*0.06,amp:0.2+Math.random()*0.5,phase:Math.random()*20,spin:true});
+  }
+
+  // MORE ASTEROIDS in stratosphere
+  for(let i=0;i<15;i++){
+    const s=0.3+Math.random()*1.2;
+    const geos=[new THREE.DodecahedronGeometry(s,0),new THREE.IcosahedronGeometry(s,0),new THREE.OctahedronGeometry(s,0)];
+    const g=geos[Math.floor(Math.random()*3)];
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(Math.random()>0.5?ORANGE:GOLD,0.15+Math.random()*0.15));
+    wire.position.set((Math.random()-0.5)*120,(Math.random()-0.5)*50,-15-Math.random()*40);
+    L4.add(wire);
+    const fill=new THREE.Mesh(g.clone(),solidMat(DEEP,0.04));
+    fill.position.copy(wire.position);L4.add(fill);
+    floatingObjects.push({obj:wire,speed:0.05+Math.random()*0.15,amp:0.2+Math.random()*0.5,phase:Math.random()*10,spin:true});
+  }
+
+  scene.add(L4);
+
+  // ═══════════════════════════════════════
+  // LAYER 5: MOON (slides 9-10)
+  // ═══════════════════════════════════════
+  const L5=new THREE.Group();L5.position.y=550;
+  // Moon — wireframe + filled interior + glow
+  const moonGeo=new THREE.IcosahedronGeometry(14,3);
+  const moonWire=new THREE.LineSegments(new THREE.WireframeGeometry(moonGeo),lineMat(GOLD,0.3));
+  moonWire.position.set(28,5,-45);L5.add(moonWire);
+  const moonFill=new THREE.Mesh(new THREE.IcosahedronGeometry(13.5,2),solidMat(0x1a1000,0.15));
+  moonFill.position.copy(moonWire.position);L5.add(moonFill);
+  // Moon glow halo
+  const moonHalo=new THREE.Mesh(new THREE.CircleGeometry(22,32),solidMat(GOLD,0.03));
+  moonHalo.position.set(28,5,-46);L5.add(moonHalo);
+  // Glow rings
+  for(let r=0;r<4;r++){
+    const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+      new THREE.EllipseCurve(0,0,17+r*3,17+r*3,0,Math.PI*2,false,0).getPoints(80).map(p=>new THREE.Vector3(p.x,p.y,0))
+    ),lineMat(GOLD,0.12-r*0.025));
+    ring.position.set(28,5,-45);ring.rotation.x=Math.PI*0.5+(Math.random()-0.5)*0.3;ring.rotation.z=Math.random()*0.5;
+    L5.add(ring);
+  }
+  // Earth receding — filled + wireframe
+  const earthFar=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(8,2)),lineMat(ORANGE,0.2));
+  earthFar.position.set(-25,-20,-65);L5.add(earthFar);
+  const earthFill=new THREE.Mesh(new THREE.SphereGeometry(7.5,12,8),solidMat(DEEP,0.08));
+  earthFill.position.copy(earthFar.position);L5.add(earthFill);
+  // Dense star field
+  for(let i=0;i<350;i++){
+    const sx=(Math.random()-0.5)*200,sy=(Math.random()-0.5)*80,sz=-15-Math.random()*75;
+    const ss=0.03+Math.random()*0.15;const bright=Math.random()>0.75;
+    const star=new THREE.Mesh(new THREE.CircleGeometry(ss,6),solidMat(bright?WARM:(Math.random()>0.5?GOLD:PALE),bright?0.7:0.15+Math.random()*0.4));
+    star.position.set(sx,sy,sz);star.lookAt(camera.position);L5.add(star);
+    if(bright&&Math.random()>0.5){
+      const h=new THREE.Mesh(new THREE.CircleGeometry(ss*4,6),solidMat(ORANGE,0.025));
+      h.position.copy(star.position);h.lookAt(camera.position);L5.add(h);
+    }
+  }
+  // Debris / asteroid contours
+  for(let i=0;i<6;i++){
+    const s=0.5+Math.random()*1.5;
+    const g=new THREE.DodecahedronGeometry(s,0);
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(ORANGE,0.2));
+    wire.position.set((Math.random()-0.5)*60,(Math.random()-0.5)*40,-20-Math.random()*30);
+    L5.add(wire);
+    const fill=new THREE.Mesh(new THREE.DodecahedronGeometry(s*0.9,0),solidMat(DEEP,0.05));
+    fill.position.copy(wire.position);L5.add(fill);
+    floatingObjects.push({obj:wire,speed:0.08+Math.random()*0.15,amp:0.3+Math.random(),phase:Math.random()*10,spin:true});
+  }
+
+  // MORE PLANETS in moon zone
+  const moonPlanets=[
+    {s:10,x:-50,y:25,z:-55,wc:ORANGE,fc:DEEP,wo:0.18,fo:0.06,rings:true},
+    {s:5,x:55,y:-30,z:-50,wc:GOLD,fc:0x1a1000,wo:0.2,fo:0.07,rings:false},
+    {s:7,x:-60,y:40,z:-70,wc:WARM,fc:DEEP,wo:0.14,fo:0.05,rings:true},
+    {s:3.5,x:40,y:35,z:-35,wc:BRIGHT,fc:0x2a1000,wo:0.22,fo:0.06,rings:false},
+    {s:12,x:-35,y:-35,z:-80,wc:ORANGE,fc:DEEP,wo:0.1,fo:0.03,rings:true},
+    {s:4,x:65,y:10,z:-45,wc:PALE,fc:0x1a1000,wo:0.2,fo:0.07,rings:false},
+    {s:6,x:-15,y:50,z:-60,wc:GOLD,fc:DEEP,wo:0.16,fo:0.05,rings:false},
+  ];
+  moonPlanets.forEach(pc=>{
+    const pw=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(pc.s,pc.s>8?3:2)),lineMat(pc.wc,pc.wo));
+    pw.position.set(pc.x,pc.y,pc.z);L5.add(pw);
+    const pf=new THREE.Mesh(new THREE.SphereGeometry(pc.s*0.95,16,12),solidMat(pc.fc,pc.fo));
+    pf.position.copy(pw.position);L5.add(pf);
+    // Glow halo
+    const halo=new THREE.Mesh(new THREE.CircleGeometry(pc.s*1.3,20),solidMat(pc.wc,0.015));
+    halo.position.set(pc.x,pc.y,pc.z-0.5);L5.add(halo);
+    if(pc.rings){
+      for(let r=0;r<2;r++){
+        const rPts=new THREE.EllipseCurve(0,0,pc.s*(1.4+r*0.3),pc.s*(1.4+r*0.3),0,Math.PI*2,false,0).getPoints(80).map(p2=>new THREE.Vector3(p2.x,p2.y,0));
+        const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(rPts),lineMat(pc.wc,pc.wo*0.4));
+        ring.position.copy(pw.position);ring.rotation.x=0.6+Math.random()*0.8;ring.rotation.z=Math.random()*0.4;L5.add(ring);
+      }
+    }
+    floatingObjects.push({obj:pw,speed:0.03+Math.random()*0.08,amp:0,phase:0,spin:true});
+  });
+
+  // MASSIVE ASTEROID BELT
+  for(let i=0;i<30;i++){
+    const s=0.2+Math.random()*2;
+    const geos=[new THREE.DodecahedronGeometry(s,0),new THREE.IcosahedronGeometry(s,0),new THREE.OctahedronGeometry(s,0),new THREE.TetrahedronGeometry(s,0)];
+    const g=geos[Math.floor(Math.random()*4)];
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(Math.random()>0.5?ORANGE:GOLD,0.12+Math.random()*0.2));
+    wire.position.set((Math.random()-0.5)*140,(Math.random()-0.5)*60,-10-Math.random()*50);
+    L5.add(wire);
+    if(s>0.8){
+      const fill=new THREE.Mesh(g.clone(),solidMat(DEEP,0.04+Math.random()*0.03));
+      fill.position.copy(wire.position);L5.add(fill);
+    }
+    floatingObjects.push({obj:wire,speed:0.04+Math.random()*0.12,amp:0.15+Math.random()*0.6,phase:Math.random()*15,spin:true});
+  }
+
+  scene.add(L5);
+
+  // ═══════════════════════════════════════
+  // LAYER 6: GALAXY (slides 11-13)
+  // ═══════════════════════════════════════
+  const L6=new THREE.Group();L6.position.y=750;
+  // Dense spiral arms — 6 arms, triple-stranded
+  for(let arm=0;arm<6;arm++){
+    const off=(arm/6)*Math.PI*2;
+    for(let strand=0;strand<3;strand++){
+      const pts=[];const sOff=strand*0.08;
+      for(let i=0;i<=150;i++){const t=i/150;const angle=off+sOff+t*Math.PI*3.5;
+      const r=1.5+t*50+strand*1.5;
+      pts.push(new THREE.Vector3(Math.cos(angle)*r+(Math.random()-0.5)*1.2,(Math.random()-0.5)*(1-t)*2,Math.sin(angle)*r+(Math.random()-0.5)*1.2-35))}
+      const c=new THREE.CatmullRomCurve3(pts);
+      const o=strand===0?0.35:strand===1?0.18:0.08;
+      const col=strand===0?[ORANGE,BRIGHT]:strand===1?[DEEP,GOLD]:[WARM,PALE];
+      L6.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(250)),gradMat(col[0],col[1],o)));
+    }
+  }
+  // Galaxy core — layered glow
+  const coreGeo=new THREE.IcosahedronGeometry(4,3);
+  const core=new THREE.LineSegments(new THREE.WireframeGeometry(coreGeo),lineMat(BRIGHT,0.6));
+  core.position.set(0,0,-35);L6.add(core);
+  const coreFill=new THREE.Mesh(new THREE.SphereGeometry(3.5,16,12),solidMat(ORANGE,0.1));
+  coreFill.position.set(0,0,-35);L6.add(coreFill);
+  const coreInner=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.5,1)),lineMat(GOLD,0.8));
+  coreInner.position.set(0,0,-35);L6.add(coreInner);
+  // Core glow halos
+  for(let i=0;i<3;i++){
+    const h=new THREE.Mesh(new THREE.CircleGeometry(6+i*3,24),solidMat(ORANGE,0.04-i*0.01));
+    h.position.set(0,0,-34);L6.add(h);
+  }
+  // Nebula blobs
+  for(let i=0;i<12;i++){
+    const s=3+Math.random()*6;const angle=Math.random()*Math.PI*2;const r=15+Math.random()*25;
+    const blob=new THREE.Mesh(new THREE.SphereGeometry(s,10,8),solidMat(Math.random()>0.5?DEEP:0x2a1000,0.02+Math.random()*0.02));
+    blob.scale.set(1.5,0.6,1);blob.position.set(Math.cos(angle)*r,(Math.random()-0.5)*5,Math.sin(angle)*r-35);
+    L6.add(blob);
+  }
+  // Dense deep star field
+  for(let i=0;i<600;i++){
+    const sx=(Math.random()-0.5)*250,sy=(Math.random()-0.5)*130,sz=-55-Math.random()*55;
+    const ss=0.02+Math.random()*0.1;const bright=Math.random()>0.8;
+    const star=new THREE.Mesh(new THREE.CircleGeometry(ss,5),solidMat(bright?WARM:(Math.random()>0.5?GOLD:WHITE),bright?0.8:0.1+Math.random()*0.35));
+    star.position.set(sx,sy,sz);star.lookAt(camera.position);L6.add(star);
+  }
+  scene.add(L6);
+
+  // ═══════════════════════════════════════
+  // GLOBAL STAR FIELD — spans entire journey
+  // ═══════════════════════════════════════
+  // Near stars — large, bright, parallax fast (close to camera)
+  const nearStars=new THREE.Group();
+  for(let i=0;i<400;i++){
+    const ss=0.05+Math.random()*0.2;const bright=Math.random()>0.6;
+    const star=new THREE.Mesh(new THREE.CircleGeometry(ss,6),solidMat(bright?WARM:GOLD,bright?0.5:0.15+Math.random()*0.3));
+    star.position.set((Math.random()-0.5)*120,(Math.random())*800,-10-Math.random()*30);
+    star.lookAt(new THREE.Vector3(star.position.x,star.position.y,star.position.z+10));
+    nearStars.add(star);
+    if(bright&&Math.random()>0.5){
+      const h=new THREE.Mesh(new THREE.CircleGeometry(ss*5,8),solidMat(ORANGE,0.02));
+      h.position.copy(star.position);h.lookAt(new THREE.Vector3(h.position.x,h.position.y,h.position.z+10));
+      nearStars.add(h);
+    }
+  }
+  scene.add(nearStars);
+
+  // Mid stars — medium brightness, medium depth
+  const midStars=new THREE.Group();
+  for(let i=0;i<800;i++){
+    const ss=0.03+Math.random()*0.12;
+    const star=new THREE.Mesh(new THREE.CircleGeometry(ss,5),solidMat(
+      Math.random()>0.7?PALE:(Math.random()>0.5?GOLD:WHITE),0.08+Math.random()*0.25));
+    star.position.set((Math.random()-0.5)*200,(Math.random())*800,-40-Math.random()*40);
+    star.lookAt(new THREE.Vector3(star.position.x,star.position.y,star.position.z+10));
+    midStars.add(star);
+  }
+  scene.add(midStars);
+
+  // Far stars — tiny, dim, deep background
+  const farStars=new THREE.Group();
+  for(let i=0;i<1500;i++){
+    const ss=0.01+Math.random()*0.06;
+    const star=new THREE.Mesh(new THREE.CircleGeometry(ss,4),solidMat(
+      Math.random()>0.8?GOLD:WHITE,0.04+Math.random()*0.15));
+    star.position.set((Math.random()-0.5)*300,(Math.random())*800,-80-Math.random()*60);
+    star.lookAt(new THREE.Vector3(star.position.x,star.position.y,star.position.z+10));
+    farStars.add(star);
+  }
+  scene.add(farStars);
+
+  // Floating depth sprites — small shapes at various depths for parallax
+  const depthSprites=[];
+  for(let i=0;i<60;i++){
+    const s=0.15+Math.random()*0.4;
+    const geos=[
+      new THREE.IcosahedronGeometry(s,0),
+      new THREE.OctahedronGeometry(s,0),
+      new THREE.TetrahedronGeometry(s,0),
+      new THREE.DodecahedronGeometry(s,0)
+    ];
+    const g=geos[Math.floor(Math.random()*geos.length)];
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(Math.random()>0.5?GOLD:ORANGE,0.1+Math.random()*0.2));
+    wire.position.set(
+      (Math.random()-0.5)*150,
+      Math.random()*800,
+      -5-Math.random()*70
+    );
+    scene.add(wire);
+    depthSprites.push({obj:wire,depth:wire.position.z,rotSpeed:0.002+Math.random()*0.005});
+  }
+
+  // Streaking light trails — long thin lines suggesting motion
+  const trails=new THREE.Group();
+  for(let i=0;i<40;i++){
+    const len=2+Math.random()*8;
+    const y=Math.random()*800;
+    const x=(Math.random()-0.5)*120;
+    const z=-15-Math.random()*50;
+    const pts=[new THREE.Vector3(x,y,z),new THREE.Vector3(x+(Math.random()-0.5)*0.5,y+len,z)];
+    trails.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat(Math.random()>0.5?ORANGE:GOLD,0.04+Math.random()*0.08)));
+  }
+  scene.add(trails);
+
+  // ═══════════════════════════════════════
+  // CAMERA & ANIMATION
+  // ═══════════════════════════════════════
+  const alts=[5,5,50,80,140,180,220,300,380,470,550,650,750,770];
+  let curAlt=alts[0],curRot=0,lookY=alts[0]-5;
+  const clock=new THREE.Clock();
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const t=clock.getElapsedTime();
+    const tAlt=alts[Math.min(targetSlide,alts.length-1)];
+    curAlt+=(tAlt-curAlt)*0.008;
+    lookY+=(tAlt-8-lookY)*0.006;
+    curRot+=0.0004;
+
+    camera.position.y=curAlt;
+    camera.position.x=Math.sin(curRot)*6;
+    camera.position.z=40+Math.cos(curRot*0.5)*3;
+    camera.lookAt(0,lookY,-25);
+
+    // Parallax — move star layers at different speeds relative to camera
+    const camDelta=curAlt-alts[0];
+    nearStars.position.y=-camDelta*0.15;  // fast parallax
+    midStars.position.y=-camDelta*0.08;   // medium
+    farStars.position.y=-camDelta*0.03;   // slow — feels very far
+    trails.position.y=-camDelta*0.1;
+
+    for(const m of gradientMats)if(m.uniforms)m.uniforms.time.value=t;
+
+    // Float objects
+    for(const f of floatingObjects){
+      const p=f.phase||0;
+      f.obj.position.y+=Math.sin(t*f.speed+p)*0.003*f.amp;
+      if(f.spin){f.obj.rotation.x+=0.001;f.obj.rotation.y+=0.0015;}
+    }
+
+    // Depth sprites spin
+    for(const d of depthSprites){
+      d.obj.rotation.x+=d.rotSpeed;
+      d.obj.rotation.y+=d.rotSpeed*0.7;
+    }
+
+    L6.rotation.y+=0.0012;L6.rotation.x=Math.sin(t*0.15)*0.03;
+    if(moonWire)moonWire.rotation.y+=0.0008;
+    if(earthFar)earthFar.rotation.y+=0.0005;
+    const pulse=1+Math.sin(t*0.8)*0.08;
+    core.scale.set(pulse,pulse,pulse);core.rotation.y+=0.005;core.rotation.x+=0.003;
+    coreInner.scale.set(1/pulse,1/pulse,1/pulse);coreInner.rotation.y-=0.008;coreInner.rotation.z+=0.004;
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
