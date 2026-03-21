@@ -33,71 +33,72 @@ body {
 .slide {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: 2.5rem 4rem; opacity: 0; pointer-events: none;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.7s ease;
   overflow-y: auto;
+  perspective: 1200px; transform-style: preserve-3d;
 }
 .slide.active { opacity: 1; pointer-events: auto; z-index: 2; }
 .slide.prev { opacity: 0; }
 
-/* ── ENTER: elements assemble from scattered positions ── */
-.slide.active .section-label { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
-.slide.active .section-title { animation: flyFromRight 1s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
-.slide.active .section-intro { animation: fadeRise 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
-.slide.active .hero-title { animation: heroZoomIn 1.2s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
-.slide.active .hero-sub { animation: fadeRise 1s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
-.slide.active .hero-meta { animation: fadeRise 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
-.slide.active .ascii-art, .slide.active .ascii-divider { animation: glitchIn 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
-.slide.active .quote-block { animation: slideFromBottom 0.9s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
-.slide.active .bio-photo { animation: spinIn 1s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
-.slide.active .bio-name { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
-.slide.active .bio-title-text { animation: typeIn 0.6s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
-.slide.active .closing-title { animation: heroZoomIn 1.2s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
-.slide.active .closing-meta { animation: fadeRise 0.8s cubic-bezier(0.16,1,0.3,1) 0.6s both; }
-.slide.active .card-stat { animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.4s both; }
+/* ── ENTER: cinematic element assembly ── */
+.slide.active .section-label { animation: cinematicFromLeft 1.1s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+.slide.active .section-title { animation: cinematicFromRight 1.4s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .section-intro { animation: cinematicRise 1.2s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
+.slide.active .hero-title { animation: epicZoomIn 1.8s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+.slide.active .hero-sub { animation: cinematicRise 1.3s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+.slide.active .hero-meta { animation: cinematicRise 1.1s cubic-bezier(0.16,1,0.3,1) 0.8s both; }
+.slide.active .ascii-art, .slide.active .ascii-divider { animation: glitchIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .quote-block { animation: dramaticSlideUp 1.3s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+.slide.active .bio-photo { animation: dramaticSpinIn 1.4s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.slide.active .bio-name { animation: cinematicFromLeft 1.1s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+.slide.active .bio-title-text { animation: cinematicTypeIn 1s cubic-bezier(0.16,1,0.3,1) 0.55s both; }
+.slide.active .closing-title { animation: epicZoomIn 1.8s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+.slide.active .closing-meta { animation: cinematicRise 1.1s cubic-bezier(0.16,1,0.3,1) 0.9s both; }
+.slide.active .card-stat { animation: dramaticPopIn 1s cubic-bezier(0.34,1.56,0.64,1) 0.5s both; }
 
-/* Cards scatter in from alternating sides */
-.slide.active .card:nth-child(odd) { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) both; }
-.slide.active .card:nth-child(even) { animation: flyFromRight 0.8s cubic-bezier(0.16,1,0.3,1) both; }
-.slide.active .card:nth-child(1) { animation-delay: 0.2s; }
-.slide.active .card:nth-child(2) { animation-delay: 0.28s; }
-.slide.active .card:nth-child(3) { animation-delay: 0.36s; }
-.slide.active .card:nth-child(4) { animation-delay: 0.44s; }
-.slide.active .card:nth-child(5) { animation-delay: 0.52s; }
-.slide.active .card:nth-child(6) { animation-delay: 0.6s; }
-.slide.active .card:nth-child(7) { animation-delay: 0.68s; }
+/* Cards sweep in from alternating sides with 3D depth */
+.slide.active .card:nth-child(odd) { animation: cinematicFromLeft 1.1s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .card:nth-child(even) { animation: cinematicFromRight 1.1s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .card:nth-child(1) { animation-delay: 0.25s; }
+.slide.active .card:nth-child(2) { animation-delay: 0.38s; }
+.slide.active .card:nth-child(3) { animation-delay: 0.51s; }
+.slide.active .card:nth-child(4) { animation-delay: 0.64s; }
+.slide.active .card:nth-child(5) { animation-delay: 0.77s; }
+.slide.active .card:nth-child(6) { animation-delay: 0.9s; }
+.slide.active .card:nth-child(7) { animation-delay: 1.03s; }
 
-.slide.active .path-card:nth-child(1) { animation: flyFromLeft 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
-.slide.active .path-card:nth-child(2) { animation: flyFromRight 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
-.slide.active .future-card:nth-child(1) { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
-.slide.active .future-card:nth-child(2) { animation: flyFromRight 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
-.slide.active .future-card:nth-child(3) { animation: flyFromLeft 0.8s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
-.slide.active .future-card:nth-child(4) { animation: flyFromRight 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+.slide.active .path-card:nth-child(1) { animation: cinematicFromLeft 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+.slide.active .path-card:nth-child(2) { animation: cinematicFromRight 1.2s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+.slide.active .future-card:nth-child(1) { animation: cinematicFromLeft 1.1s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
+.slide.active .future-card:nth-child(2) { animation: cinematicFromRight 1.1s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
+.slide.active .future-card:nth-child(3) { animation: cinematicFromLeft 1.1s cubic-bezier(0.16,1,0.3,1) 0.55s both; }
+.slide.active .future-card:nth-child(4) { animation: cinematicFromRight 1.1s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
 
-/* Therapy items cascade with alternating directions */
-.slide.active .therapy-item:nth-child(odd) { animation: flyFromLeft 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-.slide.active .therapy-item:nth-child(even) { animation: flyFromRight 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-.slide.active .therapy-item:nth-child(1) { animation-delay: 0.15s; }
-.slide.active .therapy-item:nth-child(2) { animation-delay: 0.2s; }
-.slide.active .therapy-item:nth-child(3) { animation-delay: 0.25s; }
-.slide.active .therapy-item:nth-child(4) { animation-delay: 0.3s; }
-.slide.active .therapy-item:nth-child(5) { animation-delay: 0.35s; }
-.slide.active .therapy-item:nth-child(6) { animation-delay: 0.4s; }
-.slide.active .therapy-item:nth-child(7) { animation-delay: 0.45s; }
-.slide.active .therapy-item:nth-child(8) { animation-delay: 0.5s; }
+/* Therapy items cascade with cinematic stagger */
+.slide.active .therapy-item:nth-child(odd) { animation: cinematicFromLeft 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .therapy-item:nth-child(even) { animation: cinematicFromRight 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+.slide.active .therapy-item:nth-child(1) { animation-delay: 0.2s; }
+.slide.active .therapy-item:nth-child(2) { animation-delay: 0.3s; }
+.slide.active .therapy-item:nth-child(3) { animation-delay: 0.4s; }
+.slide.active .therapy-item:nth-child(4) { animation-delay: 0.5s; }
+.slide.active .therapy-item:nth-child(5) { animation-delay: 0.6s; }
+.slide.active .therapy-item:nth-child(6) { animation-delay: 0.7s; }
+.slide.active .therapy-item:nth-child(7) { animation-delay: 0.8s; }
+.slide.active .therapy-item:nth-child(8) { animation-delay: 0.9s; }
 
-/* Bio bullets drop in with bounce */
-.slide.active .bio-bullets li { animation: dropIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
-.slide.active .bio-bullets li:nth-child(1) { animation-delay: 0.3s; }
-.slide.active .bio-bullets li:nth-child(2) { animation-delay: 0.38s; }
-.slide.active .bio-bullets li:nth-child(3) { animation-delay: 0.46s; }
-.slide.active .bio-bullets li:nth-child(4) { animation-delay: 0.54s; }
-.slide.active .bio-bullets li:nth-child(5) { animation-delay: 0.62s; }
-.slide.active .bio-bullets li:nth-child(6) { animation-delay: 0.7s; }
-.slide.active .bio-bullets li:nth-child(7) { animation-delay: 0.78s; }
+/* Bio bullets drop in with dramatic bounce */
+.slide.active .bio-bullets li { animation: dramaticDropIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both; }
+.slide.active .bio-bullets li:nth-child(1) { animation-delay: 0.4s; }
+.slide.active .bio-bullets li:nth-child(2) { animation-delay: 0.52s; }
+.slide.active .bio-bullets li:nth-child(3) { animation-delay: 0.64s; }
+.slide.active .bio-bullets li:nth-child(4) { animation-delay: 0.76s; }
+.slide.active .bio-bullets li:nth-child(5) { animation-delay: 0.88s; }
+.slide.active .bio-bullets li:nth-child(6) { animation-delay: 1.0s; }
+.slide.active .bio-bullets li:nth-child(7) { animation-delay: 1.12s; }
 
-.slide.active .principle:nth-child(1) { animation: flyFromLeft 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
-.slide.active .principle:nth-child(2) { animation: flyFromRight 0.7s cubic-bezier(0.16,1,0.3,1) 0.32s both; }
-.slide.active .principle:nth-child(3) { animation: flyFromLeft 0.7s cubic-bezier(0.16,1,0.3,1) 0.44s both; }
+.slide.active .principle:nth-child(1) { animation: cinematicFromLeft 1s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+.slide.active .principle:nth-child(2) { animation: cinematicFromRight 1s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+.slide.active .principle:nth-child(3) { animation: cinematicFromLeft 1s cubic-bezier(0.16,1,0.3,1) 0.7s both; }
 
 /* ── EXIT: elements scatter outward and down ── */
 .slide.prev .section-label { animation: flyOutRight 0.4s ease-in both; }
@@ -125,63 +126,73 @@ body {
 .slide.prev .future-card:nth-child(4) { --sx:50px; --sy:80px; --sr:-4deg; }
 .slide.prev .therapy-item { animation: fadeDown 0.25s ease-in both; }
 
-/* ── KEYFRAMES ── */
-@keyframes flyFromLeft {
-  from { opacity:0; transform:translateX(-140px) translateY(20px) rotate(-2deg); filter:blur(8px); }
-  to { opacity:1; transform:translateX(0) translateY(0) rotate(0); filter:blur(0); }
+/* ── CINEMATIC KEYFRAMES ── */
+@keyframes cinematicFromLeft {
+  0% { opacity:0; transform:translateX(-220px) translateY(30px) translateZ(-80px) rotateY(12deg) rotate(-4deg) scale(0.85); filter:blur(14px); }
+  40% { opacity:0.7; filter:blur(4px); }
+  100% { opacity:1; transform:translateX(0) translateY(0) translateZ(0) rotateY(0) rotate(0) scale(1); filter:blur(0); }
 }
-@keyframes flyFromRight {
-  from { opacity:0; transform:translateX(140px) translateY(20px) rotate(2deg); filter:blur(8px); }
-  to { opacity:1; transform:translateX(0) translateY(0) rotate(0); filter:blur(0); }
+@keyframes cinematicFromRight {
+  0% { opacity:0; transform:translateX(220px) translateY(30px) translateZ(-80px) rotateY(-12deg) rotate(4deg) scale(0.85); filter:blur(14px); }
+  40% { opacity:0.7; filter:blur(4px); }
+  100% { opacity:1; transform:translateX(0) translateY(0) translateZ(0) rotateY(0) rotate(0) scale(1); filter:blur(0); }
 }
-@keyframes fadeRise {
-  from { opacity:0; transform:translateY(50px); filter:blur(6px); }
-  to { opacity:1; transform:translateY(0); filter:blur(0); }
+@keyframes cinematicRise {
+  0% { opacity:0; transform:translateY(90px) translateZ(-60px) scale(0.9); filter:blur(12px); }
+  50% { opacity:0.8; filter:blur(3px); }
+  100% { opacity:1; transform:translateY(0) translateZ(0) scale(1); filter:blur(0); }
 }
-@keyframes slideFromBottom {
-  from { opacity:0; transform:translateY(80px) scaleY(0.7); filter:blur(6px); }
-  to { opacity:1; transform:translateY(0) scaleY(1); filter:blur(0); }
+@keyframes dramaticSlideUp {
+  0% { opacity:0; transform:translateY(120px) translateZ(-100px) scaleY(0.5) scaleX(0.95); filter:blur(14px); }
+  35% { opacity:0.6; transform:translateY(30px) translateZ(-20px) scaleY(0.9) scaleX(0.98); filter:blur(4px); }
+  100% { opacity:1; transform:translateY(0) translateZ(0) scaleY(1) scaleX(1); filter:blur(0); }
 }
-@keyframes heroZoomIn {
-  0% { opacity:0; transform:scale(0.4) translateY(40px); filter:blur(16px); }
-  50% { opacity:1; filter:blur(3px); }
-  100% { opacity:1; transform:scale(1) translateY(0); filter:blur(0); }
+@keyframes epicZoomIn {
+  0% { opacity:0; transform:scale(0.15) translateY(60px) translateZ(-200px) rotateX(8deg); filter:blur(25px); }
+  30% { opacity:0.6; transform:scale(0.7) translateY(15px) translateZ(-40px) rotateX(3deg); filter:blur(8px); }
+  60% { opacity:0.95; transform:scale(1.06) translateY(-5px) translateZ(10px) rotateX(-1deg); filter:blur(1px); }
+  100% { opacity:1; transform:scale(1) translateY(0) translateZ(0) rotateX(0); filter:blur(0); }
 }
-@keyframes spinIn {
-  from { opacity:0; transform:scale(0.4) rotate(-20deg); filter:blur(8px); }
-  to { opacity:1; transform:scale(1) rotate(0deg); filter:blur(0); }
+@keyframes dramaticSpinIn {
+  0% { opacity:0; transform:scale(0.2) rotate(-40deg) translateZ(-120px); filter:blur(16px); }
+  50% { opacity:0.8; transform:scale(0.9) rotate(5deg) translateZ(-10px); filter:blur(3px); }
+  100% { opacity:1; transform:scale(1) rotate(0deg) translateZ(0); filter:blur(0); }
 }
-@keyframes typeIn {
-  from { opacity:0; transform:translateX(-30px); clip-path:inset(0 100% 0 0); filter:blur(4px); }
-  to { opacity:1; transform:translateX(0); clip-path:inset(0 0 0 0); filter:blur(0); }
+@keyframes cinematicTypeIn {
+  0% { opacity:0; transform:translateX(-60px) translateZ(-40px); clip-path:inset(0 100% 0 0); filter:blur(8px); }
+  50% { opacity:0.7; clip-path:inset(0 40% 0 0); filter:blur(2px); }
+  100% { opacity:1; transform:translateX(0) translateZ(0); clip-path:inset(0 0 0 0); filter:blur(0); }
 }
-@keyframes dropIn {
-  from { opacity:0; transform:translateY(-40px) scale(0.85); }
-  to { opacity:1; transform:translateY(0) scale(1); }
+@keyframes dramaticDropIn {
+  0% { opacity:0; transform:translateY(-80px) translateZ(-60px) scale(0.6) rotateX(-15deg); filter:blur(8px); }
+  60% { transform:translateY(8px) translateZ(5px) scale(1.05) rotateX(2deg); }
+  100% { opacity:1; transform:translateY(0) translateZ(0) scale(1) rotateX(0); filter:blur(0); }
 }
-@keyframes popIn {
-  0% { opacity:0; transform:scale(0.2); filter:blur(10px); }
-  60% { transform:scale(1.2); filter:blur(0); }
-  100% { opacity:1; transform:scale(1); filter:blur(0); }
+@keyframes dramaticPopIn {
+  0% { opacity:0; transform:scale(0.1) translateZ(-100px); filter:blur(18px); }
+  40% { opacity:0.8; transform:scale(1.35) translateZ(20px); filter:blur(0); }
+  70% { transform:scale(0.92) translateZ(-5px); }
+  100% { opacity:1; transform:scale(1) translateZ(0); filter:blur(0); }
 }
 @keyframes glitchIn {
-  0% { opacity:0; transform:translateX(-8px) skewX(-12deg); filter:blur(6px); }
-  25% { opacity:0.6; transform:translateX(5px) skewX(6deg); filter:blur(2px); }
-  50% { opacity:0.8; transform:translateX(-3px) skewX(-3deg); }
-  75% { opacity:0.95; transform:translateX(1px) skewX(1deg); }
-  100% { opacity:1; transform:translateX(0) skewX(0); filter:blur(0); }
+  0% { opacity:0; transform:translateX(-15px) skewX(-18deg) translateZ(-50px); filter:blur(10px); }
+  15% { opacity:0.4; transform:translateX(10px) skewX(10deg) translateZ(-20px); filter:blur(5px); }
+  30% { opacity:0.6; transform:translateX(-6px) skewX(-6deg) translateZ(-10px); filter:blur(2px); }
+  50% { opacity:0.8; transform:translateX(4px) skewX(3deg) translateZ(-3px); }
+  70% { opacity:0.95; transform:translateX(-2px) skewX(-1deg) translateZ(0); }
+  100% { opacity:1; transform:translateX(0) skewX(0) translateZ(0); filter:blur(0); }
 }
-@keyframes flyOutLeft { to { opacity:0; transform:translateX(-120px) translateY(50px) rotate(-3deg); filter:blur(8px); } }
-@keyframes flyOutRight { to { opacity:0; transform:translateX(120px) translateY(50px) rotate(3deg); filter:blur(8px); } }
-@keyframes fadeDown { to { opacity:0; transform:translateY(60px); filter:blur(6px); } }
+@keyframes flyOutLeft { to { opacity:0; transform:translateX(-180px) translateY(70px) translateZ(-80px) rotateY(-8deg) rotate(-5deg); filter:blur(12px); } }
+@keyframes flyOutRight { to { opacity:0; transform:translateX(180px) translateY(70px) translateZ(-80px) rotateY(8deg) rotate(5deg); filter:blur(12px); } }
+@keyframes fadeDown { to { opacity:0; transform:translateY(80px) translateZ(-60px) scale(0.9); filter:blur(10px); } }
 @keyframes scatterOut {
-  to { opacity:0; transform:translate(var(--sx,30px),var(--sy,60px)) scale(0.8) rotate(var(--sr,3deg)); filter:blur(7px); }
+  to { opacity:0; transform:translate(var(--sx,30px),var(--sy,60px)) translateZ(-100px) scale(0.6) rotate(var(--sr,3deg)); filter:blur(12px); }
 }
 @keyframes glitchOut {
   0% { opacity:1; }
-  25% { opacity:0.6; transform:translateX(5px) skewX(6deg); }
-  50% { opacity:0.3; transform:translateX(-8px) skewX(-10deg); filter:blur(3px); }
-  100% { opacity:0; transform:translateX(10px) skewX(14deg); filter:blur(8px); }
+  20% { opacity:0.6; transform:translateX(8px) skewX(10deg) translateZ(-20px); }
+  40% { opacity:0.3; transform:translateX(-12px) skewX(-14deg) translateZ(-40px); filter:blur(5px); }
+  100% { opacity:0; transform:translateX(15px) skewX(18deg) translateZ(-80px); filter:blur(12px); }
 }
 .container { max-width: 1100px; width: 100%; margin: 0 auto; }
 
@@ -965,13 +976,13 @@ body {
   // ═══════════════════════════════════════
   const L1=new THREE.Group();
 
-  // Dense water grid — 40 rows
-  for(let r=0;r<40;r++){
+  // Dense water grid — 80 rows
+  for(let r=0;r<80;r++){
     const z=-35+r*2;const o=0.08+(r/40)*0.18;
     L1.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(smoothLine(0,z,0.12+r*0.015,1.5+r*0.08,80,180)),gradMat(DEEP,GOLD,o)));
   }
-  // Mountain silhouettes — 6 layers with fills
-  for(let l=0;l<6;l++){
+  // Mountain silhouettes — 12 layers with fills
+  for(let l=0;l<12;l++){
     const z=-45-l*6,h=5+l*4,o=0.15+l*0.07;
     const p=[];for(let i=0;i<=120;i++){const t=i/120;const x=(t-0.5)*200;
     const y=Math.abs(Math.sin(t*Math.PI*3+l*1.2))*h+Math.sin(t*Math.PI*7+l)*h*0.25+Math.sin(t*Math.PI*11)*h*0.1;
@@ -988,11 +999,11 @@ body {
     }
   }
   // Bright horizon glow — multiple lines
-  for(let i=0;i<3;i++){
+  for(let i=0;i<6;i++){
     L1.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(smoothLine(0.3+i*0.2,-55-i*2,0.15,0.4,100,220)),lineMat(i===0?BRIGHT:ORANGE,0.35-i*0.08)));
   }
   // Floating contour orbs near water
-  for(let i=0;i<8;i++){
+  for(let i=0;i<16;i++){
     const g=new THREE.SphereGeometry(0.5+Math.random()*0.8,12,8);
     const m=new THREE.Mesh(g,solidMat(ORANGE,0.06+Math.random()*0.06));
     m.position.set((Math.random()-0.5)*60,1+Math.random()*3,-5-Math.random()*15);
@@ -1003,7 +1014,7 @@ body {
     w.position.copy(m.position);L1.add(w);
   }
   // Firefly particles
-  for(let i=0;i<30;i++){
+  for(let i=0;i<60;i++){
     const g=new THREE.SphereGeometry(0.08,4,4);
     const ff=new THREE.Mesh(g,solidMat(WARM,0.4+Math.random()*0.4));
     ff.position.set((Math.random()-0.5)*80,0.5+Math.random()*6,(Math.random()-0.5)*40);
@@ -1016,7 +1027,7 @@ body {
   // ═══════════════════════════════════════
   const L2=new THREE.Group();L2.position.y=80;
   // Dense rolling peaks
-  for(let l=0;l<8;l++){
+  for(let l=0;l<16;l++){
     const z=-25-l*5,h=8+l*5;
     const p=[];for(let i=0;i<=100;i++){const t=i/100;const x=(t-0.5)*160;
     const y=Math.pow(Math.abs(Math.sin(t*Math.PI*2.5+l*0.8)),1.3)*h+Math.sin(t*Math.PI*5+l*2)*h*0.2;
@@ -1025,7 +1036,7 @@ body {
     L2.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c),gradMat(DEEP,WARM,0.12+l*0.05)));
   }
   // Big cloud masses — filled ellipsoids
-  for(let i=0;i<15;i++){
+  for(let i=0;i<30;i++){
     const s=2+Math.random()*5;
     const g=new THREE.SphereGeometry(s,16,10);
     const cloud=new THREE.Mesh(g,solidMat(ORANGE,0.025+Math.random()*0.02));
@@ -1043,7 +1054,7 @@ body {
     floatingObjects.push({obj:cloud,speed:0.1+Math.random()*0.2,amp:0.5+Math.random(),phase:Math.random()*20});
   }
   // Small bright particles in clouds
-  for(let i=0;i<40;i++){
+  for(let i=0;i<80;i++){
     const g=new THREE.SphereGeometry(0.06,3,3);
     const p=new THREE.Mesh(g,solidMat(PALE,0.3+Math.random()*0.4));
     p.position.set((Math.random()-0.5)*80,8+Math.random()*25,-5-Math.random()*25);
@@ -1056,7 +1067,7 @@ body {
   // ═══════════════════════════════════════
   const L3=new THREE.Group();L3.position.y=220;
   // Atmospheric horizon curves — bright
-  for(let l=0;l<10;l++){
+  for(let l=0;l<20;l++){
     const y=-12-l*3.5,z=-28+l*1.5;
     const p=[];for(let i=0;i<=100;i++){const t=i/100;
     p.push(new THREE.Vector3((t-0.5)*200,y-Math.sin(t*Math.PI)*(6+l*1.5),z))}
@@ -1064,7 +1075,7 @@ body {
     L3.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(150)),gradMat(l<5?DEEP:ORANGE,l<5?ORANGE:GOLD,0.06+l*0.035)));
   }
   // Floating icosahedrons — wireframe + solid core
-  for(let i=0;i<20;i++){
+  for(let i=0;i<40;i++){
     const s=0.3+Math.random()*0.8;
     const g=new THREE.IcosahedronGeometry(s,1);
     const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(GOLD,0.25+Math.random()*0.2));
@@ -1082,7 +1093,7 @@ body {
   // ═══════════════════════════════════════
   const L4=new THREE.Group();L4.position.y=380;
   // Earth curvature — thick bright arc + glow arcs
-  for(let a=0;a<5;a++){
+  for(let a=0;a<10;a++){
     const R=110-a*6;const p=[];
     for(let i=0;i<=120;i++){const t=(i/120-0.5)*Math.PI*0.7;
     p.push(new THREE.Vector3(Math.sin(t)*R,-Math.cos(t)*R+28-a*2,-38+a*1.5))}
@@ -1090,7 +1101,7 @@ body {
     L4.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(180)),a===0?gradMat(ORANGE,BRIGHT,0.35):lineMat(ORANGE,0.1+a*0.04)));
   }
   // Stars — bright filled circles + glow
-  for(let i=0;i<200;i++){
+  for(let i=0;i<400;i++){
     const sx=(Math.random()-0.5)*160,sy=(Math.random()-0.5)*55+15,sz=-20-Math.random()*55;
     const ss=0.06+Math.random()*0.2;const bright=Math.random()>0.7;
     const g=new THREE.CircleGeometry(ss,8);
@@ -1116,6 +1127,11 @@ body {
     {s:8,x:35,y:-25,z:-65,wc:WARM,fc:DEEP,wo:0.12,fo:0.04},
     {s:2.5,x:-30,y:35,z:-40,wc:BRIGHT,fc:DEEP,wo:0.25,fo:0.07},
     {s:5,x:60,y:-5,z:-60,wc:GOLD,fc:0x2a1000,wo:0.15,fo:0.05},
+    {s:4,x:-70,y:20,z:-50,wc:WARM,fc:DEEP,wo:0.16,fo:0.06},
+    {s:7,x:75,y:-20,z:-70,wc:ORANGE,fc:0x1a1000,wo:0.14,fo:0.05},
+    {s:2,x:20,y:40,z:-35,wc:GOLD,fc:DEEP,wo:0.22,fo:0.07},
+    {s:9,x:-65,y:-30,z:-75,wc:BRIGHT,fc:DEEP,wo:0.1,fo:0.04},
+    {s:3.5,x:45,y:45,z:-48,wc:PALE,fc:0x2a1000,wo:0.2,fo:0.06},
   ];
   planetConfigs.forEach(pc=>{
     const pw=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(pc.s,2)),lineMat(pc.wc,pc.wo));
@@ -1132,7 +1148,7 @@ body {
   });
 
   // SATELLITES — cross-shaped with solar panel wings
-  for(let i=0;i<8;i++){
+  for(let i=0;i<16;i++){
     const satGroup=new THREE.Group();
     // Body — small box
     const body=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.BoxGeometry(0.4,0.4,0.8)),lineMat(PALE,0.35));
@@ -1172,7 +1188,7 @@ body {
   }
 
   // MORE ASTEROIDS in stratosphere
-  for(let i=0;i<15;i++){
+  for(let i=0;i<30;i++){
     const s=0.3+Math.random()*1.2;
     const geos=[new THREE.DodecahedronGeometry(s,0),new THREE.IcosahedronGeometry(s,0),new THREE.OctahedronGeometry(s,0)];
     const g=geos[Math.floor(Math.random()*3)];
@@ -1200,7 +1216,7 @@ body {
   const moonHalo=new THREE.Mesh(new THREE.CircleGeometry(22,32),solidMat(GOLD,0.03));
   moonHalo.position.set(28,5,-46);L5.add(moonHalo);
   // Glow rings
-  for(let r=0;r<4;r++){
+  for(let r=0;r<8;r++){
     const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
       new THREE.EllipseCurve(0,0,17+r*3,17+r*3,0,Math.PI*2,false,0).getPoints(80).map(p=>new THREE.Vector3(p.x,p.y,0))
     ),lineMat(GOLD,0.12-r*0.025));
@@ -1213,7 +1229,7 @@ body {
   const earthFill=new THREE.Mesh(new THREE.SphereGeometry(7.5,12,8),solidMat(DEEP,0.08));
   earthFill.position.copy(earthFar.position);L5.add(earthFill);
   // Dense star field
-  for(let i=0;i<350;i++){
+  for(let i=0;i<700;i++){
     const sx=(Math.random()-0.5)*200,sy=(Math.random()-0.5)*80,sz=-15-Math.random()*75;
     const ss=0.03+Math.random()*0.15;const bright=Math.random()>0.75;
     const star=new THREE.Mesh(new THREE.CircleGeometry(ss,6),solidMat(bright?WARM:(Math.random()>0.5?GOLD:PALE),bright?0.7:0.15+Math.random()*0.4));
@@ -1224,7 +1240,7 @@ body {
     }
   }
   // Debris / asteroid contours
-  for(let i=0;i<6;i++){
+  for(let i=0;i<12;i++){
     const s=0.5+Math.random()*1.5;
     const g=new THREE.DodecahedronGeometry(s,0);
     const wire=new THREE.LineSegments(new THREE.WireframeGeometry(g),lineMat(ORANGE,0.2));
@@ -1244,6 +1260,13 @@ body {
     {s:12,x:-35,y:-35,z:-80,wc:ORANGE,fc:DEEP,wo:0.1,fo:0.03,rings:true},
     {s:4,x:65,y:10,z:-45,wc:PALE,fc:0x1a1000,wo:0.2,fo:0.07,rings:false},
     {s:6,x:-15,y:50,z:-60,wc:GOLD,fc:DEEP,wo:0.16,fo:0.05,rings:false},
+    {s:8,x:70,y:45,z:-65,wc:WARM,fc:DEEP,wo:0.15,fo:0.05,rings:true},
+    {s:3,x:-70,y:-15,z:-40,wc:BRIGHT,fc:0x1a1000,wo:0.2,fo:0.06,rings:false},
+    {s:9,x:30,y:-45,z:-75,wc:ORANGE,fc:DEEP,wo:0.12,fo:0.04,rings:true},
+    {s:5.5,x:-45,y:-50,z:-55,wc:GOLD,fc:0x2a1000,wo:0.18,fo:0.06,rings:false},
+    {s:11,x:50,y:55,z:-85,wc:WARM,fc:DEEP,wo:0.1,fo:0.03,rings:true},
+    {s:4.5,x:-80,y:10,z:-50,wc:PALE,fc:DEEP,wo:0.18,fo:0.06,rings:false},
+    {s:6.5,x:20,y:60,z:-70,wc:GOLD,fc:0x1a1000,wo:0.14,fo:0.05,rings:true},
   ];
   moonPlanets.forEach(pc=>{
     const pw=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(pc.s,pc.s>8?3:2)),lineMat(pc.wc,pc.wo));
@@ -1264,7 +1287,7 @@ body {
   });
 
   // MASSIVE ASTEROID BELT
-  for(let i=0;i<30;i++){
+  for(let i=0;i<60;i++){
     const s=0.2+Math.random()*2;
     const geos=[new THREE.DodecahedronGeometry(s,0),new THREE.IcosahedronGeometry(s,0),new THREE.OctahedronGeometry(s,0),new THREE.TetrahedronGeometry(s,0)];
     const g=geos[Math.floor(Math.random()*4)];
@@ -1284,8 +1307,8 @@ body {
   // LAYER 6: GALAXY (slides 11-13)
   // ═══════════════════════════════════════
   const L6=new THREE.Group();L6.position.y=750;
-  // Dense spiral arms — 6 arms, triple-stranded
-  for(let arm=0;arm<6;arm++){
+  // Dense spiral arms — 12 arms, triple-stranded
+  for(let arm=0;arm<12;arm++){
     const off=(arm/6)*Math.PI*2;
     for(let strand=0;strand<3;strand++){
       const pts=[];const sOff=strand*0.08;
@@ -1307,19 +1330,19 @@ body {
   const coreInner=new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(2.5,1)),lineMat(GOLD,0.8));
   coreInner.position.set(0,0,-35);L6.add(coreInner);
   // Core glow halos
-  for(let i=0;i<3;i++){
+  for(let i=0;i<6;i++){
     const h=new THREE.Mesh(new THREE.CircleGeometry(6+i*3,24),solidMat(ORANGE,0.04-i*0.01));
     h.position.set(0,0,-34);L6.add(h);
   }
   // Nebula blobs
-  for(let i=0;i<12;i++){
+  for(let i=0;i<24;i++){
     const s=3+Math.random()*6;const angle=Math.random()*Math.PI*2;const r=15+Math.random()*25;
     const blob=new THREE.Mesh(new THREE.SphereGeometry(s,10,8),solidMat(Math.random()>0.5?DEEP:0x2a1000,0.02+Math.random()*0.02));
     blob.scale.set(1.5,0.6,1);blob.position.set(Math.cos(angle)*r,(Math.random()-0.5)*5,Math.sin(angle)*r-35);
     L6.add(blob);
   }
   // Dense deep star field
-  for(let i=0;i<600;i++){
+  for(let i=0;i<1200;i++){
     const sx=(Math.random()-0.5)*250,sy=(Math.random()-0.5)*130,sz=-55-Math.random()*55;
     const ss=0.02+Math.random()*0.1;const bright=Math.random()>0.8;
     const star=new THREE.Mesh(new THREE.CircleGeometry(ss,5),solidMat(bright?WARM:(Math.random()>0.5?GOLD:WHITE),bright?0.8:0.1+Math.random()*0.35));
@@ -1332,7 +1355,7 @@ body {
   // ═══════════════════════════════════════
   // Near stars — large, bright, parallax fast (close to camera)
   const nearStars=new THREE.Group();
-  for(let i=0;i<400;i++){
+  for(let i=0;i<800;i++){
     const ss=0.05+Math.random()*0.2;const bright=Math.random()>0.6;
     const star=new THREE.Mesh(new THREE.CircleGeometry(ss,6),solidMat(bright?WARM:GOLD,bright?0.5:0.15+Math.random()*0.3));
     star.position.set((Math.random()-0.5)*120,(Math.random())*800,-10-Math.random()*30);
@@ -1348,7 +1371,7 @@ body {
 
   // Mid stars — medium brightness, medium depth
   const midStars=new THREE.Group();
-  for(let i=0;i<800;i++){
+  for(let i=0;i<1600;i++){
     const ss=0.03+Math.random()*0.12;
     const star=new THREE.Mesh(new THREE.CircleGeometry(ss,5),solidMat(
       Math.random()>0.7?PALE:(Math.random()>0.5?GOLD:WHITE),0.08+Math.random()*0.25));
@@ -1360,7 +1383,7 @@ body {
 
   // Far stars — tiny, dim, deep background
   const farStars=new THREE.Group();
-  for(let i=0;i<1500;i++){
+  for(let i=0;i<3000;i++){
     const ss=0.01+Math.random()*0.06;
     const star=new THREE.Mesh(new THREE.CircleGeometry(ss,4),solidMat(
       Math.random()>0.8?GOLD:WHITE,0.04+Math.random()*0.15));
@@ -1372,7 +1395,7 @@ body {
 
   // Floating depth sprites — small shapes at various depths for parallax
   const depthSprites=[];
-  for(let i=0;i<60;i++){
+  for(let i=0;i<120;i++){
     const s=0.15+Math.random()*0.4;
     const geos=[
       new THREE.IcosahedronGeometry(s,0),
@@ -1393,7 +1416,7 @@ body {
 
   // Streaking light trails — long thin lines suggesting motion
   const trails=new THREE.Group();
-  for(let i=0;i<40;i++){
+  for(let i=0;i<80;i++){
     const len=2+Math.random()*8;
     const y=Math.random()*800;
     const x=(Math.random()-0.5)*120;
