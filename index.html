@@ -1452,6 +1452,142 @@ body {
   scene.add(L6);
 
   // ═══════════════════════════════════════
+  // LAYER 7: DESTINATION WORLD (inside black hole)
+  // Futuristic planet surface with buildings, flying cars, clouds
+  // ═══════════════════════════════════════
+  const destWorld=new THREE.Group();
+  destWorld.visible=false;
+  // Position at the black hole core world location
+  // L6 is at y=870, z=-80; core is at local (0,0,-35)
+  const destY=870,destZ=-80-35;
+  destWorld.position.set(0,destY,destZ);
+
+  // --- Ground plane: glowing grid ---
+  const groundY=-12;
+  for(let i=-20;i<=20;i++){
+    // X-parallel grid lines
+    const gx=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-100,groundY,i*5),new THREE.Vector3(100,groundY,i*5)
+    ]),lineMat(i%5===0?ORANGE:GOLD,i%5===0?0.25:0.08));
+    destWorld.add(gx);
+    // Z-parallel grid lines
+    const gz=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(i*5,groundY,-100),new THREE.Vector3(i*5,groundY,100)
+    ]),lineMat(i%5===0?ORANGE:GOLD,i%5===0?0.25:0.08));
+    destWorld.add(gz);
+  }
+  // Ground fill
+  const groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(200,200),solidMat(0x1a0800,0.15));
+  groundMesh.rotation.x=-Math.PI/2;groundMesh.position.y=groundY-0.1;destWorld.add(groundMesh);
+
+  // --- Futuristic buildings: wireframe towers ---
+  const buildings=[];
+  const buildingData=[
+    {x:-35,z:-30,w:6,d:6,h:40},{x:-25,z:-20,w:4,d:4,h:28},{x:-15,z:-35,w:8,d:5,h:55},
+    {x:10,z:-25,w:5,d:5,h:35},{x:22,z:-30,w:7,d:4,h:48},{x:35,z:-20,w:4,d:4,h:30},
+    {x:45,z:-35,w:6,d:6,h:60},{x:-45,z:-25,w:5,d:5,h:38},{x:55,z:-28,w:4,d:4,h:25},
+    {x:-55,z:-32,w:7,d:5,h:45},{x:0,z:-40,w:10,d:8,h:70},{x:-8,z:-22,w:4,d:4,h:32},
+    {x:30,z:-45,w:5,d:5,h:42},{x:-40,z:-45,w:6,d:4,h:50},{x:50,z:-15,w:4,d:6,h:33},
+    {x:-20,z:-50,w:5,d:5,h:38},{x:15,z:-50,w:6,d:6,h:52},{x:60,z:-40,w:5,d:4,h:28},
+  ];
+  buildingData.forEach(b=>{
+    const geo=new THREE.BoxGeometry(b.w,b.h,b.d);
+    // Wireframe outline
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.3));
+    wire.position.set(b.x,groundY+b.h/2,b.z);destWorld.add(wire);
+    // Solid fill
+    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.06));
+    fill.position.copy(wire.position);destWorld.add(fill);
+    // Glowing windows — horizontal lines on facades
+    for(let wy=3;wy<b.h-2;wy+=3){
+      if(Math.random()>0.3){
+        const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-b.w/2,0,b.d/2+0.1),new THREE.Vector3(b.w/2,0,b.d/2+0.1)
+        ]),lineMat(Math.random()>0.5?WARM:BRIGHT,0.2+Math.random()*0.3));
+        winLine.position.set(b.x,groundY+wy,b.z);destWorld.add(winLine);
+      }
+    }
+    // Antenna/spire on top of tall buildings
+    if(b.h>40){
+      const spire=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0,0,0),new THREE.Vector3(0,b.h*0.2,0)
+      ]),lineMat(BRIGHT,0.4));
+      spire.position.set(b.x,groundY+b.h,b.z);destWorld.add(spire);
+      // Beacon light
+      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.4,6,4),solidMat(BRIGHT,0.8));
+      beacon.position.set(b.x,groundY+b.h+b.h*0.2,b.z);destWorld.add(beacon);
+      buildings.push({beacon,h:b.h});
+    }
+  });
+
+  // --- Flying cars: small elongated shapes that move ---
+  const flyingCars=[];
+  for(let i=0;i<18;i++){
+    const carGroup=new THREE.Group();
+    // Body — small elongated box
+    const carBody=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),solidMat(Math.random()>0.5?WARM:PALE,0.6));
+    carGroup.add(carBody);
+    // Windshield
+    const windshield=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.25,0.52),solidMat(0x66ccff,0.4));
+    windshield.position.x=0.2;windshield.position.y=0.15;carGroup.add(windshield);
+    // Engine glow trail
+    const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-0.6,0,0),new THREE.Vector3(-2.5,0,0)
+    ]),lineMat(ORANGE,0.3));
+    carGroup.add(trail);
+    // Underside glow
+    const glow=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6),solidMat(ORANGE,0.08));
+    glow.rotation.x=Math.PI/2;glow.position.y=-0.2;carGroup.add(glow);
+
+    const altitude=groundY+15+Math.random()*40;
+    const radius=15+Math.random()*50;
+    const speed=0.15+Math.random()*0.4;
+    const startAngle=Math.random()*Math.PI*2;
+    const yVar=Math.random()*3;
+    carGroup.position.set(Math.cos(startAngle)*radius,altitude,Math.sin(startAngle)*radius-30);
+    destWorld.add(carGroup);
+    flyingCars.push({mesh:carGroup,radius,speed,angle:startAngle,baseY:altitude,yVar});
+  }
+
+  // --- Clouds: soft translucent ellipsoids ---
+  for(let i=0;i<25;i++){
+    const cs=4+Math.random()*8;
+    const cloud=new THREE.Mesh(new THREE.SphereGeometry(cs,12,8),solidMat(0xffeedd,0.025+Math.random()*0.02));
+    cloud.scale.set(2+Math.random(),0.4+Math.random()*0.2,1+Math.random()*0.5);
+    cloud.position.set((Math.random()-0.5)*120,groundY+50+Math.random()*30,(Math.random()-0.5)*80-20);
+    destWorld.add(cloud);
+    // Cloud contour rings
+    for(let r=0;r<2;r++){
+      const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+        new THREE.EllipseCurve(0,0,cs*(1.5-r*0.3),cs*(0.35-r*0.05),0,Math.PI*2,false,0).getPoints(40).map(p=>new THREE.Vector3(p.x,p.y,0))
+      ),lineMat(PALE,0.06+r*0.02));
+      ring.position.copy(cloud.position);ring.rotation.x=Math.PI*0.5;destWorld.add(ring);
+    }
+  }
+
+  // --- Horizon glow ---
+  for(let i=0;i<5;i++){
+    const hLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-120,groundY+0.5+i*0.3,-100+i*2),new THREE.Vector3(120,groundY+0.5+i*0.3,-100+i*2)
+    ]),lineMat(ORANGE,0.15-i*0.025));
+    destWorld.add(hLine);
+  }
+
+  // --- Distant mountains/terrain on horizon ---
+  for(let l=0;l<5;l++){
+    const pts=[];
+    for(let i=0;i<=80;i++){
+      const tx=i/80;const x=(tx-0.5)*200;
+      const y=groundY+Math.abs(Math.sin(tx*Math.PI*3+l*1.5))*8*(1+l*0.5)+Math.sin(tx*Math.PI*7+l)*2;
+      pts.push(new THREE.Vector3(x,y,-80-l*8));
+    }
+    const curve=new THREE.CatmullRomCurve3(pts).getPoints(160);
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(l<2?ORANGE:GOLD,0.12-l*0.015)));
+  }
+
+  scene.add(destWorld);
+
+  // ═══════════════════════════════════════
   // GLOBAL STAR FIELD — spans entire journey
   // ═══════════════════════════════════════
   // Near stars — large, bright, parallax fast (close to camera)
@@ -1591,7 +1727,7 @@ body {
   let curAlt=alts[0],curRot=0,lookY=alts[0]-5;
   const clock=new THREE.Clock();
 
-  // ── Black hole zoom for "See you there" slide ──
+  // ── Black hole zoom → destination world for "See you there" slide ──
   let zoomStartTime=0;
   let zoomStartPos={x:0,y:870,z:40};
 
@@ -1611,22 +1747,66 @@ body {
         zoomStartPos={x:camera.position.x,y:camera.position.y,z:camera.position.z};
       }
       const elapsed=t-zoomStartTime;
-      // Zoom over 6 seconds with ease-in (accelerating into the black hole)
-      const raw=Math.min(elapsed/6,1);
-      const ease=raw*raw*raw; // cubic ease-in — slow start, fast finish
 
-      // Fly straight into the black hole core
-      camera.position.x=zoomStartPos.x+(coreWorldX-zoomStartPos.x)*ease;
-      camera.position.y=zoomStartPos.y+(coreWorldY-zoomStartPos.y)*ease;
-      camera.position.z=zoomStartPos.z+(coreWorldZ+5-zoomStartPos.z)*ease;
-      camera.lookAt(coreWorldX,coreWorldY,coreWorldZ);
+      // Phase 1 (0-4s): zoom into black hole
+      // Phase 2 (4-7s): emerge inside destination world
+      if(elapsed<4){
+        const raw=Math.min(elapsed/4,1);
+        const ease=raw*raw; // quadratic ease-in
 
-      // Narrow FOV for dramatic tunnel zoom, then snap ultra-narrow at the end
-      camera.fov=50-ease*42;
-      camera.updateProjectionMatrix();
+        camera.position.x=zoomStartPos.x+(coreWorldX-zoomStartPos.x)*ease;
+        camera.position.y=zoomStartPos.y+(coreWorldY-zoomStartPos.y)*ease;
+        camera.position.z=zoomStartPos.z+(coreWorldZ+8-zoomStartPos.z)*ease;
+        camera.lookAt(coreWorldX,coreWorldY,coreWorldZ);
+
+        // Narrow FOV as we dive in
+        camera.fov=50-ease*35;
+        camera.updateProjectionMatrix();
+
+        // Show destination world near the end of phase 1
+        if(raw>0.7) destWorld.visible=true;
+      } else {
+        // Phase 2: we've arrived — orbit gently inside the destination world
+        destWorld.visible=true;
+        const p2=Math.min((elapsed-4)/3,1);
+        const easeOut=1-Math.pow(1-p2,3); // cubic ease-out
+
+        // Camera rises up above the cityscape and orbits slowly
+        const viewRadius=25+easeOut*20;
+        const orbitAngle=t*0.15;
+        const viewY=destY+groundY+8+easeOut*18;
+
+        camera.position.x=Math.sin(orbitAngle)*viewRadius;
+        camera.position.y=viewY;
+        camera.position.z=destZ+Math.cos(orbitAngle)*viewRadius;
+        camera.lookAt(0,destY+groundY+20,-80-35-15);
+
+        // Widen FOV back for panoramic view
+        camera.fov=15+easeOut*45;
+        camera.updateProjectionMatrix();
+
+        // Hide galaxy layer once we're inside the new world
+        if(easeOut>0.3) L6.visible=false;
+      }
+
+      // Animate flying cars
+      for(const car of flyingCars){
+        car.angle+=car.speed*0.016;
+        car.mesh.position.x=Math.cos(car.angle)*car.radius;
+        car.mesh.position.z=Math.sin(car.angle)*car.radius-30;
+        car.mesh.position.y=car.baseY+Math.sin(t*0.5+car.angle)*car.yVar;
+        car.mesh.rotation.y=car.angle+Math.PI*0.5;
+      }
+      // Pulse building beacons
+      for(const b of buildings){
+        b.beacon.material.opacity=0.4+Math.sin(t*2+b.h)*0.4;
+      }
     } else {
       // Reset zoom state when leaving the slide
-      if(zoomStartTime!==0){zoomStartTime=0;camera.fov=50;camera.updateProjectionMatrix();}
+      if(zoomStartTime!==0){
+        zoomStartTime=0;camera.fov=50;camera.updateProjectionMatrix();
+        destWorld.visible=false;L6.visible=true;
+      }
 
       const tAlt=alts[Math.min(targetSlide,alts.length-1)];
       curAlt+=(tAlt-curAlt)*0.008;
