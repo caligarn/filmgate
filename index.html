@@ -1462,14 +1462,9 @@ body {
   const destY=870,destZ=-80-35;
   destWorld.position.set(0,destY,destZ);
 
-  // --- Cached materials for destination world (avoid thousands of unique instances) ---
-  const _mc={};
-  function cachedLine(c,o){const k='l'+c+'_'+(o*100|0);return _mc[k]||(_mc[k]=lineMat(c,o))}
-  function cachedSolid(c,o){const k='s'+c+'_'+(o*100|0);return _mc[k]||(_mc[k]=solidMat(c,o))}
-
   // --- Ground plane ---
   const groundY=-12;
-  const groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(300,300),cachedSolid(0x1a0800,0.12));
+  const groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(300,300),solidMat(0x1a0800,0.12));
   groundMesh.rotation.x=-Math.PI/2;groundMesh.position.y=groundY-0.1;destWorld.add(groundMesh);
   // Subtle ground grid
   for(let i=-30;i<=30;i++){
@@ -1478,496 +1473,272 @@ body {
     destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i*5,groundY,-150),new THREE.Vector3(i*5,groundY,150)]),lineMat(GOLD,op)));
   }
 
-  // === RIVER flowing through the center ===
+  // === RIVER flowing through the center (like the Seine in Paris) ===
   const riverPts=[];
-  const riverWidth=12;
+  const riverWidth=8;
   for(let i=0;i<=100;i++){
     const t=i/100;
     const z=(t-0.5)*280;
-    const x=Math.sin(t*Math.PI*2.5)*10+Math.sin(t*Math.PI*5)*4+Math.sin(t*Math.PI*1.2)*3;
+    const x=Math.sin(t*Math.PI*2.5)*6+Math.sin(t*Math.PI*5)*2; // gentle S-curves
     riverPts.push({x,z});
   }
-  // River surface — many bright translucent strips for visibility
-  for(let s=-5;s<=5;s++){
-    const pts=riverPts.map(p=>new THREE.Vector3(p.x+s*1.1,groundY+0.05,p.z));
-    const curve=new THREE.CatmullRomCurve3(pts).getPoints(250);
-    const brightness=Math.abs(s)<2?0.35:0.2-Math.abs(s)*0.015;
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(0x44aadd,brightness)));
+  // River surface — multiple translucent strips
+  for(let s=-3;s<=3;s++){
+    const pts=riverPts.map(p=>new THREE.Vector3(p.x+s*1.2,groundY+0.05,p.z));
+    const curve=new THREE.CatmullRomCurve3(pts).getPoints(200);
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(0x4499cc,0.15-Math.abs(s)*0.02)));
   }
-  // River center highlight — bright core flow
-  for(let s=-1;s<=1;s++){
-    const pts=riverPts.map(p=>new THREE.Vector3(p.x+s*0.8,groundY+0.08,p.z));
-    const curve=new THREE.CatmullRomCurve3(pts).getPoints(250);
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(0x88ddff,0.4)));
-  }
-  // River banks — double lines for definition
+  // River banks
   for(let side=-1;side<=1;side+=2){
-    for(let b=0;b<2;b++){
-      const bankPts=riverPts.map(p=>new THREE.Vector3(p.x+side*(riverWidth+b*0.5),groundY+0.3+b*0.15,p.z));
-      const bankCurve=new THREE.CatmullRomCurve3(bankPts).getPoints(250);
-      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(bankCurve),lineMat(b===0?WARM:GOLD,0.35-b*0.1)));
-    }
+    const bankPts=riverPts.map(p=>new THREE.Vector3(p.x+side*riverWidth,groundY+0.3,p.z));
+    const bankCurve=new THREE.CatmullRomCurve3(bankPts).getPoints(200);
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(bankCurve),lineMat(WARM,0.25)));
   }
-  // Animated river wave lines (stored for animation — these move!)
+  // Animated river shimmer lines (stored for animation)
   const riverShimmerLines=[];
-  for(let i=0;i<40;i++){
+  for(let i=0;i<15;i++){
     const idx=Math.floor(Math.random()*80)+10;
     const p=riverPts[idx];
-    // Wavy cross-river line
-    const wavePts=[];
-    for(let w=0;w<=20;w++){
-      const wt=w/20;
-      const wx=p.x+(wt-0.5)*riverWidth*1.4;
-      const wy=groundY+0.12+Math.sin(wt*Math.PI*3)*0.3;
-      wavePts.push(new THREE.Vector3(wx,wy,p.z));
-    }
-    const shimmer=new THREE.Line(new THREE.BufferGeometry().setFromPoints(wavePts),lineMat(0x88ddff,0.0));
+    const shimmer=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(p.x-riverWidth*0.6,groundY+0.15,p.z),
+      new THREE.Vector3(p.x+riverWidth*0.6,groundY+0.15,p.z)
+    ]),lineMat(0x66ccff,0.0));
     destWorld.add(shimmer);
-    riverShimmerLines.push({line:shimmer,phase:Math.random()*Math.PI*2,geo:shimmer.geometry,baseZ:p.z,baseX:p.x});
+    riverShimmerLines.push({line:shimmer,phase:Math.random()*Math.PI*2});
   }
 
-  // Helper: contour edges helper — adds bright edge lines
+  // Helper: add a building with windows and optional beacon
   const buildings=[];
-  function addEdgeLines(group,geo,pos,color,opacity){
-    const edges=new THREE.EdgesGeometry(geo,20);
-    const edgeLine=new THREE.LineSegments(edges,lineMat(color,opacity));
-    edgeLine.position.copy(pos);group.add(edgeLine);
-  }
-
-  // Helper: add a rectangular building with strong contours
   function addBuilding(group,x,z,geo,h,hasBeacon){
-    const pos=new THREE.Vector3(x,groundY+h/2,z);
-    // Double wireframe for visibility
-    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.2));
-    wire.position.copy(pos);group.add(wire);
-    addEdgeLines(group,geo,pos,ORANGE,0.5);
-    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.06));
-    fill.position.copy(pos);group.add(fill);
-    const ww=geo.parameters?geo.parameters.width||4:4;
-    const wd=geo.parameters?geo.parameters.depth||4:4;
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.3));
+    wire.position.set(x,groundY+h/2,z);group.add(wire);
+    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.05));
+    fill.position.copy(wire.position);group.add(fill);
+    // Windows
     for(let wy=3;wy<h-2;wy+=3){
-      if(Math.random()>0.2){
-        // Front and back windows
-        for(let fz of [wd/2+0.1,-wd/2-0.1]){
-          const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(-ww*0.38,0,fz),new THREE.Vector3(ww*0.38,0,fz)
-          ]),lineMat(Math.random()>0.5?WARM:BRIGHT,0.25+Math.random()*0.3));
-          winLine.position.set(x,groundY+wy,z);group.add(winLine);
-        }
+      if(Math.random()>0.25){
+        const ww=geo.parameters?geo.parameters.width||4:4;
+        const wd=geo.parameters?geo.parameters.depth||4:4;
+        const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-ww*0.4,0,wd*0.5+0.1),new THREE.Vector3(ww*0.4,0,wd*0.5+0.1)
+        ]),lineMat(Math.random()>0.5?WARM:BRIGHT,0.2+Math.random()*0.3));
+        winLine.position.set(x,groundY+wy,z);group.add(winLine);
       }
     }
     if(hasBeacon){
       const spire=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0,0,0),new THREE.Vector3(0,h*0.15,0)
-      ]),lineMat(BRIGHT,0.5));
+      ]),lineMat(BRIGHT,0.4));
       spire.position.set(x,groundY+h,z);group.add(spire);
-      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.5,6,4),solidMat(BRIGHT,0.9));
+      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.4,6,4),solidMat(BRIGHT,0.8));
       beacon.position.set(x,groundY+h+h*0.15,z);group.add(beacon);
       buildings.push({beacon,h});
     }
   }
 
-  // Helper: cylindrical tower with contours
+  // Helper: create dome geometry
+  function makeDome(radius,h){
+    const geo=new THREE.SphereGeometry(radius,16,12,0,Math.PI*2,0,Math.PI*0.5);
+    return geo;
+  }
+
+  // Helper: create a tower with cylindrical base
   function addTower(group,x,z,radius,h,hasBeacon){
-    const geo=new THREE.CylinderGeometry(radius,radius,h,16);
-    const pos=new THREE.Vector3(x,groundY+h/2,z);
-    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.15));
-    wire.position.copy(pos);group.add(wire);
-    addEdgeLines(group,geo,pos,ORANGE,0.45);
-    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.05));
-    fill.position.copy(pos);group.add(fill);
-    for(let wy=3;wy<h-2;wy+=3){
-      if(Math.random()>0.15){
+    const geo=new THREE.CylinderGeometry(radius,radius,h,12);
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.25));
+    wire.position.set(x,groundY+h/2,z);group.add(wire);
+    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.04));
+    fill.position.copy(wire.position);group.add(fill);
+    // Horizontal ring windows
+    for(let wy=4;wy<h-2;wy+=4){
+      if(Math.random()>0.2){
         const ring=new THREE.Line(
           new THREE.BufferGeometry().setFromPoints(
-            new THREE.EllipseCurve(0,0,radius+0.15,radius+0.15,0,Math.PI*2,false,0).getPoints(28).map(p=>new THREE.Vector3(p.x,0,p.y))
-          ),lineMat(WARM,0.25+Math.random()*0.2));
+            new THREE.EllipseCurve(0,0,radius+0.1,radius+0.1,0,Math.PI*2,false,0).getPoints(24).map(p=>new THREE.Vector3(p.x,0,p.y))
+          ),lineMat(WARM,0.2+Math.random()*0.2));
         ring.position.set(x,groundY+wy,z);group.add(ring);
       }
     }
     if(hasBeacon){
-      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.5,6,4),solidMat(BRIGHT,0.9));
+      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.5,6,4),solidMat(BRIGHT,0.8));
       beacon.position.set(x,groundY+h+1,z);group.add(beacon);
       buildings.push({beacon,h});
     }
   }
 
-  // Helper: dome building with strong contours
+  // Helper: add dome building (dome on top of a cylinder or box base)
   function addDomeBuilding(group,x,z,radius,baseH,domeR){
-    const dr=domeR||radius;
-    // Cylindrical base with contours
-    const baseGeo=new THREE.CylinderGeometry(radius,radius,baseH,20);
-    const basePos=new THREE.Vector3(x,groundY+baseH/2,z);
-    const baseWire=new THREE.LineSegments(new THREE.WireframeGeometry(baseGeo),lineMat(GOLD,0.15));
-    baseWire.position.copy(basePos);group.add(baseWire);
-    addEdgeLines(group,baseGeo,basePos,ORANGE,0.45);
-    group.add(new THREE.Mesh(baseGeo,solidMat(DEEP,0.05)).clone().translateX(0)||Object.assign(new THREE.Mesh(baseGeo,solidMat(DEEP,0.05)),{position:basePos.clone()}));
-    const baseFill=new THREE.Mesh(baseGeo,solidMat(DEEP,0.05));
-    baseFill.position.copy(basePos);group.add(baseFill);
-    // Dome with contour rings
-    const domeGeo=new THREE.SphereGeometry(dr,20,14,0,Math.PI*2,0,Math.PI*0.5);
-    const domePos=new THREE.Vector3(x,groundY+baseH,z);
-    const domeWire=new THREE.LineSegments(new THREE.WireframeGeometry(domeGeo),lineMat(ORANGE,0.25));
-    domeWire.position.copy(domePos);group.add(domeWire);
-    addEdgeLines(group,domeGeo,domePos,BRIGHT,0.4);
-    const domeFill=new THREE.Mesh(domeGeo,solidMat(WARM,0.08));
-    domeFill.position.copy(domePos);group.add(domeFill);
-    // Dome latitude contour rings
-    for(let r=0;r<4;r++){
-      const angle=(r+1)*Math.PI*0.1;
-      const ringR=dr*Math.sin(angle);
-      const ringY=dr*Math.cos(angle);
+    // Cylindrical base
+    const baseGeo=new THREE.CylinderGeometry(radius,radius,baseH,16);
+    const baseWire=new THREE.LineSegments(new THREE.WireframeGeometry(baseGeo),lineMat(GOLD,0.25));
+    baseWire.position.set(x,groundY+baseH/2,z);group.add(baseWire);
+    const baseFill=new THREE.Mesh(baseGeo,solidMat(DEEP,0.04));
+    baseFill.position.copy(baseWire.position);group.add(baseFill);
+    // Dome on top
+    const domeGeo=makeDome(domeR||radius,radius);
+    const domeWire=new THREE.LineSegments(new THREE.WireframeGeometry(domeGeo),lineMat(ORANGE,0.35));
+    domeWire.position.set(x,groundY+baseH,z);group.add(domeWire);
+    const domeFill=new THREE.Mesh(domeGeo,solidMat(WARM,0.06));
+    domeFill.position.copy(domeWire.position);group.add(domeFill);
+    // Dome top finial
+    const finial=new THREE.Mesh(new THREE.SphereGeometry(0.3,6,4),solidMat(BRIGHT,0.7));
+    finial.position.set(x,groundY+baseH+(domeR||radius),z);group.add(finial);
+    buildings.push({beacon:finial,h:baseH+(domeR||radius)});
+    // Arched windows on base
+    for(let wy=3;wy<baseH-1;wy+=4){
       const ring=new THREE.Line(
         new THREE.BufferGeometry().setFromPoints(
-          new THREE.EllipseCurve(0,0,ringR,ringR,0,Math.PI*2,false,0).getPoints(28).map(p=>new THREE.Vector3(p.x,0,p.y))
-        ),lineMat(ORANGE,0.3));
-      ring.position.set(x,groundY+baseH+ringY,z);group.add(ring);
-    }
-    // Finial
-    const finial=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,6),solidMat(BRIGHT,0.8));
-    finial.position.set(x,groundY+baseH+dr,z);group.add(finial);
-    buildings.push({beacon:finial,h:baseH+dr});
-    // Window rings on base
-    for(let wy=3;wy<baseH-1;wy+=3){
-      const ring=new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(
-          new THREE.EllipseCurve(0,0,radius+0.15,radius+0.15,0,Math.PI*2,false,0).getPoints(24).map(p=>new THREE.Vector3(p.x,0,p.y))
-        ),lineMat(WARM,0.25));
+          new THREE.EllipseCurve(0,0,radius+0.1,radius+0.1,0,Math.PI*2,false,0).getPoints(20).map(p=>new THREE.Vector3(p.x,0,p.y))
+        ),lineMat(WARM,0.2));
       ring.position.set(x,groundY+wy,z);group.add(ring);
     }
   }
 
-  // Helper: gothic tower with contours
+  // Helper: add a gothic/pointed arch tower
   function addGothicTower(group,x,z,w,h){
+    // Square base
     const baseGeo=new THREE.BoxGeometry(w,h*0.7,w);
-    const basePos=new THREE.Vector3(x,groundY+h*0.35,z);
-    const baseWire=new THREE.LineSegments(new THREE.WireframeGeometry(baseGeo),lineMat(GOLD,0.15));
-    baseWire.position.copy(basePos);group.add(baseWire);
-    addEdgeLines(group,baseGeo,basePos,ORANGE,0.5);
-    const baseFill=new THREE.Mesh(baseGeo,solidMat(DEEP,0.05));
-    baseFill.position.copy(basePos);group.add(baseFill);
-    // Pointed spire (cone) with contours
-    const spireGeo=new THREE.ConeGeometry(w*0.5,h*0.35,10);
-    const spirePos=new THREE.Vector3(x,groundY+h*0.7+h*0.175,z);
-    const spireWire=new THREE.LineSegments(new THREE.WireframeGeometry(spireGeo),lineMat(ORANGE,0.2));
-    spireWire.position.copy(spirePos);group.add(spireWire);
-    addEdgeLines(group,spireGeo,spirePos,BRIGHT,0.45);
-    const spireFill=new THREE.Mesh(spireGeo,solidMat(DEEP,0.05));
-    spireFill.position.copy(spirePos);group.add(spireFill);
-    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.4,6,4),solidMat(BRIGHT,0.9));
+    const baseWire=new THREE.LineSegments(new THREE.WireframeGeometry(baseGeo),lineMat(GOLD,0.25));
+    baseWire.position.set(x,groundY+h*0.35,z);group.add(baseWire);
+    group.add(new THREE.Mesh(baseGeo,solidMat(DEEP,0.04)).copy(baseWire).position?baseWire:baseWire);
+    const baseFill=new THREE.Mesh(baseGeo,solidMat(DEEP,0.04));
+    baseFill.position.copy(baseWire.position);group.add(baseFill);
+    // Pointed spire (cone)
+    const spireGeo=new THREE.ConeGeometry(w*0.5,h*0.35,8);
+    const spireWire=new THREE.LineSegments(new THREE.WireframeGeometry(spireGeo),lineMat(ORANGE,0.3));
+    spireWire.position.set(x,groundY+h*0.7+h*0.175,z);group.add(spireWire);
+    const spireFill=new THREE.Mesh(spireGeo,solidMat(DEEP,0.04));
+    spireFill.position.copy(spireWire.position);group.add(spireFill);
+    // Top beacon
+    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.35,6,4),solidMat(BRIGHT,0.8));
     beacon.position.set(x,groundY+h+1,z);group.add(beacon);
     buildings.push({beacon,h});
-    for(let wy=4;wy<h*0.65;wy+=3){
-      if(Math.random()>0.2){
-        for(let fz of [w*0.5+0.1,-w*0.5-0.1]){
-          const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(-w*0.3,0,fz),new THREE.Vector3(w*0.3,0,fz)
-          ]),lineMat(BRIGHT,0.3));
-          winLine.position.set(x,groundY+wy,z);group.add(winLine);
-        }
+    // Windows
+    for(let wy=4;wy<h*0.65;wy+=4){
+      if(Math.random()>0.3){
+        const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-w*0.35,0,w*0.5+0.1),new THREE.Vector3(w*0.35,0,w*0.5+0.1)
+        ]),lineMat(BRIGHT,0.25));
+        winLine.position.set(x,groundY+wy,z);group.add(winLine);
       }
     }
   }
 
-  // Helper: pagoda with contours
+  // Helper: add a pagoda/tiered tower
   function addPagoda(group,x,z,baseW,h,tiers){
     const tierH=h/tiers;
     for(let ti=0;ti<tiers;ti++){
       const tw=baseW*(1-ti*0.12);
       const ty=groundY+ti*tierH+tierH/2;
       const tGeo=new THREE.BoxGeometry(tw,tierH*0.6,tw);
-      const tPos=new THREE.Vector3(x,ty,z);
-      const tWire=new THREE.LineSegments(new THREE.WireframeGeometry(tGeo),lineMat(GOLD,0.15));
-      tWire.position.copy(tPos);group.add(tWire);
-      addEdgeLines(group,tGeo,tPos,ORANGE,0.45);
-      const tFill=new THREE.Mesh(tGeo,solidMat(DEEP,0.05));
-      tFill.position.copy(tPos);group.add(tFill);
-      // Eave with contour
-      const eaveGeo=new THREE.BoxGeometry(tw*1.35,0.2,tw*1.35);
-      const eavePos=new THREE.Vector3(x,ty+tierH*0.3,z);
-      addEdgeLines(group,eaveGeo,eavePos,WARM,0.35);
-      group.add(new THREE.Mesh(eaveGeo,solidMat(ORANGE,0.06)).clone().translateX(0)||Object.assign(new THREE.Mesh(eaveGeo,solidMat(ORANGE,0.06)),{position:eavePos.clone()}));
-      const eaveFill=new THREE.Mesh(eaveGeo,solidMat(ORANGE,0.06));
-      eaveFill.position.copy(eavePos);group.add(eaveFill);
+      const tWire=new THREE.LineSegments(new THREE.WireframeGeometry(tGeo),lineMat(GOLD,0.25));
+      tWire.position.set(x,ty,z);group.add(tWire);
+      const tFill=new THREE.Mesh(tGeo,solidMat(DEEP,0.04));
+      tFill.position.copy(tWire.position);group.add(tFill);
+      // Eave/roof overhang
+      const eaveGeo=new THREE.BoxGeometry(tw*1.3,0.15,tw*1.3);
+      const eave=new THREE.LineSegments(new THREE.WireframeGeometry(eaveGeo),lineMat(ORANGE,0.2));
+      eave.position.set(x,ty+tierH*0.3,z);group.add(eave);
     }
+    // Top spire
     const topSpire=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0,0,0),new THREE.Vector3(0,6,0)
-    ]),lineMat(BRIGHT,0.5));
+      new THREE.Vector3(0,0,0),new THREE.Vector3(0,5,0)
+    ]),lineMat(BRIGHT,0.4));
     topSpire.position.set(x,groundY+h,z);group.add(topSpire);
-    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.4,6,4),solidMat(BRIGHT,0.9));
-    beacon.position.set(x,groundY+h+6,z);group.add(beacon);
-    buildings.push({beacon,h:h+6});
+    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.35,6,4),solidMat(BRIGHT,0.8));
+    beacon.position.set(x,groundY+h+5,z);group.add(beacon);
+    buildings.push({beacon,h:h+5});
   }
 
-  // NEW SHAPE: Onion dome (like Russian/Indian architecture)
-  function addOnionDome(group,x,z,radius,baseH,bulbR){
-    // Cylindrical base
-    const baseGeo=new THREE.CylinderGeometry(radius,radius,baseH,16);
-    const basePos=new THREE.Vector3(x,groundY+baseH/2,z);
-    addEdgeLines(group,baseGeo,basePos,ORANGE,0.45);
-    group.add(new THREE.Mesh(baseGeo,solidMat(DEEP,0.05)).clone().translateX(0)||Object.assign(new THREE.Mesh(baseGeo,solidMat(DEEP,0.05)),{position:basePos.clone()}));
-    const baseFill=new THREE.Mesh(baseGeo,solidMat(DEEP,0.05));
-    baseFill.position.copy(basePos);group.add(baseFill);
-    group.add(Object.assign(new THREE.LineSegments(new THREE.WireframeGeometry(baseGeo),lineMat(GOLD,0.15)),{position:basePos.clone()}));
-    // Onion bulb — use a lathe geometry for the distinctive shape
-    const bulbPts=[];
-    for(let i=0;i<=20;i++){
-      const t=i/20;
-      // Onion curve: narrow at base, bulge outward, narrow to point
-      let r;
-      if(t<0.3) r=radius*0.6+Math.sin(t/0.3*Math.PI*0.5)*bulbR*0.9;
-      else if(t<0.7) r=bulbR*1.1*Math.sin((t-0.3)/0.4*Math.PI);
-      else r=bulbR*0.3*(1-((t-0.7)/0.3));
-      bulbPts.push(new THREE.Vector2(Math.max(r,0.1),t*bulbR*2));
-    }
-    const bulbGeo=new THREE.LatheGeometry(bulbPts,16);
-    const bulbPos=new THREE.Vector3(x,groundY+baseH,z);
-    const bulbWire=new THREE.LineSegments(new THREE.WireframeGeometry(bulbGeo),lineMat(ORANGE,0.2));
-    bulbWire.position.copy(bulbPos);group.add(bulbWire);
-    addEdgeLines(group,bulbGeo,bulbPos,BRIGHT,0.4);
-    const bulbFill=new THREE.Mesh(bulbGeo,solidMat(WARM,0.08));
-    bulbFill.position.copy(bulbPos);group.add(bulbFill);
-    // Finial at top
-    const finial=new THREE.Mesh(new THREE.SphereGeometry(0.35,8,6),solidMat(BRIGHT,0.9));
-    finial.position.set(x,groundY+baseH+bulbR*2+0.5,z);group.add(finial);
-    buildings.push({beacon:finial,h:baseH+bulbR*2+0.5});
-    // Window rings
-    for(let wy=3;wy<baseH-1;wy+=3){
-      const ring=new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(
-          new THREE.EllipseCurve(0,0,radius+0.15,radius+0.15,0,Math.PI*2,false,0).getPoints(24).map(p=>new THREE.Vector3(p.x,0,p.y))
-        ),lineMat(WARM,0.25));
-      ring.position.set(x,groundY+wy,z);group.add(ring);
-    }
-  }
-
-  // NEW SHAPE: Stepped pyramid / ziggurat
-  function addPyramid(group,x,z,baseW,h,steps){
-    for(let s=0;s<steps;s++){
-      const frac=1-s/steps;
-      const sw=baseW*frac;
-      const sh=h/steps*0.8;
-      const sy=groundY+s*(h/steps)+sh/2;
-      const sGeo=new THREE.BoxGeometry(sw,sh,sw);
-      const sPos=new THREE.Vector3(x,sy,z);
-      addEdgeLines(group,sGeo,sPos,ORANGE,0.5);
-      group.add(Object.assign(new THREE.Mesh(sGeo,solidMat(DEEP,0.06)),{position:sPos.clone()}));
-      group.add(Object.assign(new THREE.LineSegments(new THREE.WireframeGeometry(sGeo),lineMat(GOLD,0.12)),{position:sPos.clone()}));
-    }
-    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.5,6,4),solidMat(BRIGHT,0.9));
-    beacon.position.set(x,groundY+h+1,z);group.add(beacon);
-    buildings.push({beacon,h});
-  }
-
-  // NEW SHAPE: Art Deco stepped tower
-  function addArtDeco(group,x,z,baseW,h){
-    // 3 tapered sections
-    const sections=[{frac:1,hFrac:0.5},{frac:0.7,hFrac:0.3},{frac:0.45,hFrac:0.2}];
-    let cy=groundY;
-    sections.forEach(sec=>{
-      const sw=baseW*sec.frac;
-      const sh=h*sec.hFrac;
-      const geo=new THREE.BoxGeometry(sw,sh,sw*0.8);
-      const pos=new THREE.Vector3(x,cy+sh/2,z);
-      addEdgeLines(group,geo,pos,ORANGE,0.5);
-      group.add(Object.assign(new THREE.Mesh(geo,solidMat(DEEP,0.06)),{position:pos.clone()}));
-      group.add(Object.assign(new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.12)),{position:pos.clone()}));
-      // Horizontal accent lines
-      for(let wy=2;wy<sh-1;wy+=2.5){
-        const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(-sw*0.45,0,sw*0.4+0.1),new THREE.Vector3(sw*0.45,0,sw*0.4+0.1)
-        ]),lineMat(WARM,0.3));
-        winLine.position.set(x,cy+wy,z);group.add(winLine);
-      }
-      cy+=sh;
-    });
-    // Spire
-    const spireGeo=new THREE.ConeGeometry(baseW*0.15,h*0.12,6);
-    const spirePos=new THREE.Vector3(x,cy+h*0.06,z);
-    addEdgeLines(group,spireGeo,spirePos,BRIGHT,0.5);
-    group.add(Object.assign(new THREE.Mesh(spireGeo,solidMat(DEEP,0.06)),{position:spirePos.clone()}));
-    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.4,6,4),solidMat(BRIGHT,0.9));
-    beacon.position.set(x,cy+h*0.12+1,z);group.add(beacon);
-    buildings.push({beacon,h:h*1.12});
-  }
-
-  // NEW SHAPE: Hexagonal tower
-  function addHexTower(group,x,z,radius,h,hasBeacon){
-    const geo=new THREE.CylinderGeometry(radius,radius,h,6);
-    const pos=new THREE.Vector3(x,groundY+h/2,z);
-    addEdgeLines(group,geo,pos,ORANGE,0.5);
-    group.add(Object.assign(new THREE.Mesh(geo,solidMat(DEEP,0.05)),{position:pos.clone()}));
-    group.add(Object.assign(new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.15)),{position:pos.clone()}));
-    // Hexagonal ring contours
-    for(let wy=3;wy<h-2;wy+=3){
-      const ring=new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(
-          [...Array(7)].map((_,i)=>{const a=i/6*Math.PI*2;return new THREE.Vector3(Math.cos(a)*(radius+0.15),0,Math.sin(a)*(radius+0.15))})
-        ),lineMat(WARM,0.3));
-      ring.position.set(x,groundY+wy,z);group.add(ring);
-    }
-    // Flat hex roof
-    const roofGeo=new THREE.CylinderGeometry(radius*1.1,radius*1.1,0.3,6);
-    const roofPos=new THREE.Vector3(x,groundY+h+0.15,z);
-    addEdgeLines(group,roofGeo,roofPos,WARM,0.4);
-    if(hasBeacon){
-      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.5,6,4),solidMat(BRIGHT,0.9));
-      beacon.position.set(x,groundY+h+2,z);group.add(beacon);
-      buildings.push({beacon,h:h+2});
-    }
-  }
-
-  // NEW SHAPE: Minaret — tall slender tower with balcony and cone top
-  function addMinaret(group,x,z,radius,h){
-    // Slender cylindrical shaft
-    const shaftGeo=new THREE.CylinderGeometry(radius*0.6,radius,h*0.75,12);
-    const shaftPos=new THREE.Vector3(x,groundY+h*0.375,z);
-    addEdgeLines(group,shaftGeo,shaftPos,ORANGE,0.45);
-    group.add(Object.assign(new THREE.Mesh(shaftGeo,solidMat(DEEP,0.05)),{position:shaftPos.clone()}));
-    group.add(Object.assign(new THREE.LineSegments(new THREE.WireframeGeometry(shaftGeo),lineMat(GOLD,0.12)),{position:shaftPos.clone()}));
-    // Balcony ring
-    const balconyR=radius*1.4;
-    const balconyY=groundY+h*0.75;
-    const balcony=new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(
-        new THREE.EllipseCurve(0,0,balconyR,balconyR,0,Math.PI*2,false,0).getPoints(24).map(p=>new THREE.Vector3(p.x,0,p.y))
-      ),lineMat(WARM,0.4));
-    balcony.position.set(x,balconyY,z);group.add(balcony);
-    // Upper section
-    const upperGeo=new THREE.CylinderGeometry(radius*0.4,radius*0.6,h*0.15,10);
-    const upperPos=new THREE.Vector3(x,balconyY+h*0.075,z);
-    addEdgeLines(group,upperGeo,upperPos,ORANGE,0.4);
-    group.add(Object.assign(new THREE.Mesh(upperGeo,solidMat(DEEP,0.05)),{position:upperPos.clone()}));
-    // Cone cap
-    const coneGeo=new THREE.ConeGeometry(radius*0.5,h*0.12,10);
-    const conePos=new THREE.Vector3(x,balconyY+h*0.15+h*0.06,z);
-    addEdgeLines(group,coneGeo,conePos,BRIGHT,0.45);
-    group.add(Object.assign(new THREE.Mesh(coneGeo,solidMat(WARM,0.06)),{position:conePos.clone()}));
-    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.35,6,4),solidMat(BRIGHT,0.9));
-    beacon.position.set(x,balconyY+h*0.15+h*0.12+1,z);group.add(beacon);
-    buildings.push({beacon,h:h+2});
-  }
-
-  // === LEFT BANK — FRONT ROW (closest to river) ===
-  addDomeBuilding(destWorld,-22,-20,7,30,8);
-  addOnionDome(destWorld,-16,-17,3,14,4);
-  addHexTower(destWorld,-42,-15,3.5,30,true);
-  addMinaret(destWorld,-12,-25,1.5,22);
-  addGothicTower(destWorld,-26,-28,3,28);
-  addArtDeco(destWorld,-18,-28,4,20);
-  addBuilding(destWorld,-48,-18,new THREE.BoxGeometry(4,12,3),12,false);
-  addTower(destWorld,-36,-22,2,20,false);
-  addBuilding(destWorld,-58,-22,new THREE.BoxGeometry(3,14,3),14,false);
+  // === LEFT BANK — FRONT ROW (near river) ===
+  addDomeBuilding(destWorld,-20,-20,7,30,8);
+  addDomeBuilding(destWorld,-35,-18,4,18,5);
+  addGothicTower(destWorld,-28,-25,3,28);
+  addTower(destWorld,-42,-15,2,20,false);
+  addBuilding(destWorld,-50,-18,new THREE.BoxGeometry(4,14,3),14,false);
+  addBuilding(destWorld,-15,-25,new THREE.BoxGeometry(3,12,3),12,false);
 
   // === LEFT BANK — SECOND ROW ===
-  addDomeBuilding(destWorld,-22,-35,7,30,8);
-  addDomeBuilding(destWorld,-38,-32,4,18,5);
-  addGothicTower(destWorld,-48,-35,5,50);
-  addGothicTower(destWorld,-32,-42,4,38);
-  addArtDeco(destWorld,-55,-30,7,45);
-  addBuilding(destWorld,-52,-38,new THREE.BoxGeometry(4,22,4),22,false);
-  addMinaret(destWorld,-20,-38,2,35);
-  addBuilding(destWorld,-27,-40,new THREE.BoxGeometry(5,28,5),28,false);
-  addTower(destWorld,-44,-36,3,36,true);
-  addPagoda(destWorld,-14,-42,6,35,4);
-  addOnionDome(destWorld,-60,-33,3,16,4.5);
-  addHexTower(destWorld,-36,-44,2.5,26,false);
+  addDomeBuilding(destWorld,-20,-35,7,30,8);
+  addDomeBuilding(destWorld,-15,-30,3,12,3.5);
+  addGothicTower(destWorld,-45,-35,5,50);
+  addGothicTower(destWorld,-30,-45,4,38);
+  addBuilding(destWorld,-55,-30,new THREE.BoxGeometry(6,35,5),35,true);
+  addBuilding(destWorld,-50,-38,new THREE.BoxGeometry(4,22,4),22,false);
+  addBuilding(destWorld,-25,-40,new THREE.BoxGeometry(5,28,5),28,false);
+  addBuilding(destWorld,-40,-32,new THREE.BoxGeometry(7,18,6),18,false);
+  addTower(destWorld,-48,-42,2.5,42,true);
+  addTower(destWorld,-18,-38,2,25,false);
+  addPagoda(destWorld,-14,-42,5,30,4);
+  addDomeBuilding(destWorld,-60,-33,3,14,4);
 
   // === LEFT BANK — BACK ROW ===
-  addGothicTower(destWorld,-30,-52,5,60);
-  addBuilding(destWorld,-17,-50,new THREE.BoxGeometry(4,20,4),20,false);
-  addPyramid(destWorld,-60,-50,10,20,5);
-  addTower(destWorld,-50,-48,2.5,42,true);
-  addArtDeco(destWorld,-24,-55,5,55);
-  addDomeBuilding(destWorld,-40,-54,5,22,6);
-  addOnionDome(destWorld,-56,-52,3.5,18,5);
-  addBuilding(destWorld,-46,-58,new THREE.BoxGeometry(6,35,5),35,true);
-  addPagoda(destWorld,-64,-55,6,40,5);
-  addMinaret(destWorld,-20,-58,2,40);
+  addGothicTower(destWorld,-30,-52,5,55);
+  addBuilding(destWorld,-15,-50,new THREE.BoxGeometry(4,20,4),20,false);
+  addBuilding(destWorld,-60,-48,new THREE.BoxGeometry(5,25,4),25,false);
+  addTower(destWorld,-50,-55,2.5,38,true);
+  addBuilding(destWorld,-40,-55,new THREE.BoxGeometry(5,30,5),30,true);
+  addDomeBuilding(destWorld,-22,-58,4,20,5);
+  addPagoda(destWorld,-65,-52,5,35,4);
 
   // === LEFT BANK — FAR BACK ===
-  addGothicTower(destWorld,-25,-70,6,70);
-  addArtDeco(destWorld,-50,-68,8,60);
-  addPyramid(destWorld,-40,-72,14,30,6);
-  addDomeBuilding(destWorld,-62,-70,6,28,8);
-  addBuilding(destWorld,-16,-68,new THREE.BoxGeometry(5,40,5),40,true);
-  addTower(destWorld,-34,-75,3,50,true);
-  addOnionDome(destWorld,-55,-75,4,24,6);
-  addPagoda(destWorld,-45,-78,7,50,6);
+  addGothicTower(destWorld,-25,-68,6,65);
+  addBuilding(destWorld,-50,-65,new THREE.BoxGeometry(6,40,5),40,true);
+  addDomeBuilding(destWorld,-40,-70,5,24,6);
+  addTower(destWorld,-60,-68,3,45,true);
+  addPagoda(destWorld,-35,-72,6,42,5);
 
   // === RIGHT BANK — FRONT ROW ===
-  addDomeBuilding(destWorld,24,-20,6,25,7);
-  addOnionDome(destWorld,18,-17,3.5,20,5);
-  addMinaret(destWorld,14,-25,1.5,20);
-  addHexTower(destWorld,44,-15,3,24,true);
-  addGothicTower(destWorld,28,-28,3,26);
-  addArtDeco(destWorld,20,-28,4,18);
-  addBuilding(destWorld,50,-20,new THREE.BoxGeometry(4,12,3),12,false);
-  addTower(destWorld,38,-22,2,22,false);
-  addPagoda(destWorld,56,-22,5,22,3);
+  addDomeBuilding(destWorld,22,-20,6,25,7);
+  addGothicTower(destWorld,28,-25,3,26);
+  addTower(destWorld,38,-18,2,20,false);
+  addPagoda(destWorld,50,-22,5,22,3);
+  addBuilding(destWorld,45,-15,new THREE.BoxGeometry(4,14,3),14,false);
 
   // === RIGHT BANK — SECOND ROW ===
-  addDomeBuilding(destWorld,24,-35,6,25,7);
-  addPagoda(destWorld,42,-30,7,45,5);
-  addGothicTower(destWorld,16,-40,4,55);
-  addGothicTower(destWorld,58,-40,4.5,42);
-  addTower(destWorld,32,-32,3,35,true);
-  addHexTower(destWorld,52,-35,2.5,32,true);
-  addMinaret(destWorld,62,-35,2,38);
-  addArtDeco(destWorld,38,-42,6,50);
-  addBuilding(destWorld,48,-38,new THREE.BoxGeometry(6,20,5),20,false);
-  addOnionDome(destWorld,28,-38,3,18,4.5);
-  addDomeBuilding(destWorld,66,-32,3.5,16,4);
-  addBuilding(destWorld,20,-42,new THREE.BoxGeometry(4,24,4),24,true);
+  addDomeBuilding(destWorld,22,-35,6,25,7);
+  addPagoda(destWorld,40,-30,7,45,5);
+  addGothicTower(destWorld,15,-40,4,55);
+  addGothicTower(destWorld,55,-40,4.5,42);
+  addTower(destWorld,30,-32,3,35,true);
+  addTower(destWorld,50,-35,2,30,false);
+  addTower(destWorld,60,-35,2.5,28,true);
+  addBuilding(destWorld,35,-42,new THREE.BoxGeometry(5,32,5),32,false);
+  addBuilding(destWorld,45,-38,new THREE.BoxGeometry(6,20,5),20,false);
+  addDomeBuilding(destWorld,65,-32,3,14,4);
 
   // === RIGHT BANK — BACK ROW ===
-  addBuilding(destWorld,27,-52,new THREE.BoxGeometry(4,24,4),24,false);
-  addPyramid(destWorld,70,-50,12,25,6);
-  addOnionDome(destWorld,50,-50,2.5,12,3.5);
-  addBuilding(destWorld,20,-48,new THREE.BoxGeometry(5,18,4),18,false);
-  addDomeBuilding(destWorld,65,-48,3,12,3.5);
-  addArtDeco(destWorld,36,-55,5,48);
-  addGothicTower(destWorld,44,-52,4,58);
-  addTower(destWorld,58,-56,3,40,true);
-  addPagoda(destWorld,22,-55,6,38,5);
-  addMinaret(destWorld,52,-60,2,36);
+  addBuilding(destWorld,25,-52,new THREE.BoxGeometry(4,24,4),24,false);
+  addBuilding(destWorld,18,-48,new THREE.BoxGeometry(5,18,4),18,false);
+  addDomeBuilding(destWorld,48,-50,3,10,3);
+  addGothicTower(destWorld,42,-55,4,52);
+  addTower(destWorld,58,-52,3,36,true);
+  addPagoda(destWorld,22,-55,5,35,4);
+  addBuilding(destWorld,65,-48,new THREE.BoxGeometry(4,18,4),18,false);
 
   // === RIGHT BANK — FAR BACK ===
-  addGothicTower(destWorld,28,-70,6,68);
-  addArtDeco(destWorld,52,-68,8,58);
-  addPyramid(destWorld,42,-72,14,28,6);
-  addDomeBuilding(destWorld,64,-70,6,26,8);
-  addBuilding(destWorld,18,-68,new THREE.BoxGeometry(5,38,5),38,true);
-  addTower(destWorld,36,-75,3,48,true);
-  addOnionDome(destWorld,56,-75,4,22,6);
-  addPagoda(destWorld,46,-78,7,48,6);
+  addGothicTower(destWorld,28,-68,6,62);
+  addBuilding(destWorld,52,-65,new THREE.BoxGeometry(6,38,5),38,true);
+  addDomeBuilding(destWorld,42,-70,5,22,6);
+  addTower(destWorld,62,-68,3,42,true);
+  addPagoda(destWorld,38,-72,6,40,5);
 
-  // === CENTER — near river edges ===
-  addBuilding(destWorld,-8,-20,new THREE.BoxGeometry(2,8,2),8,false);
-  addBuilding(destWorld,8,-20,new THREE.BoxGeometry(2,8,2),8,false);
-  addTower(destWorld,-5,-35,1.5,12,false);
-  addTower(destWorld,5,-35,1.5,12,false);
-  addMinaret(destWorld,-10,-50,1,15);
-  addMinaret(destWorld,10,-50,1,15);
+  // === FLANKS ===
+  addGothicTower(destWorld,-75,-35,4,32);
+  addTower(destWorld,-72,-50,2.5,22,true);
+  addBuilding(destWorld,-70,-25,new THREE.BoxGeometry(5,16,5),16,false);
+  addGothicTower(destWorld,75,-35,4,32);
+  addTower(destWorld,72,-50,2.5,22,true);
+  addBuilding(destWorld,70,-25,new THREE.BoxGeometry(5,16,5),16,false);
 
-  // === DISTANT FLANKS ===
-  addGothicTower(destWorld,-80,-35,4,35);
-  addTower(destWorld,-78,-50,2.5,25,true);
-  addArtDeco(destWorld,-85,-42,5,30);
-  addBuilding(destWorld,-75,-25,new THREE.BoxGeometry(5,15,5),15,false);
-  addGothicTower(destWorld,80,-35,4,35);
-  addTower(destWorld,78,-50,2.5,25,true);
-  addArtDeco(destWorld,85,-42,5,30);
-  addBuilding(destWorld,75,-25,new THREE.BoxGeometry(5,15,5),15,false);
-
-  // === BRIDGES crossing the river (many more!) ===
-  const bridgePositions=[-75,-60,-45,-30,-18,-5,10,22,35,48,60,75];
-  bridgePositions.forEach(bz=>{
+  // === BRIDGES crossing the river ===
+  for(let bi=0;bi<8;bi++){
+    const bz=-70+bi*20;
     const idx=Math.floor((bz/280+0.5)*100);
     const cIdx=Math.max(0,Math.min(99,idx));
     const rx=riverPts[cIdx]?riverPts[cIdx].x:0;
-    const bridgeLen=riverWidth*3;
     // Bridge deck
+    const bridgeLen=riverWidth*3;
     const bridge=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(rx-bridgeLen/2,groundY+1.5,bz),
       new THREE.Vector3(rx-bridgeLen*0.15,groundY+3,bz),
@@ -1975,14 +1746,6 @@ body {
       new THREE.Vector3(rx+bridgeLen/2,groundY+1.5,bz)
     ]),lineMat(WARM,0.35));
     destWorld.add(bridge);
-    // Second deck line for thickness
-    const bridge2=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(rx-bridgeLen/2,groundY+1.3,bz+0.3),
-      new THREE.Vector3(rx-bridgeLen*0.15,groundY+2.8,bz+0.3),
-      new THREE.Vector3(rx+bridgeLen*0.15,groundY+2.8,bz+0.3),
-      new THREE.Vector3(rx+bridgeLen/2,groundY+1.3,bz+0.3)
-    ]),lineMat(GOLD,0.2));
-    destWorld.add(bridge2);
     // Bridge arch underneath
     const archPts=[];
     for(let ai=0;ai<=20;ai++){
@@ -1992,31 +1755,22 @@ body {
       archPts.push(new THREE.Vector3(ax,ay,bz));
     }
     destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(archPts),lineMat(GOLD,0.2)));
-    // Second arch
-    const archPts2=archPts.map(p=>new THREE.Vector3(p.x,p.y-0.3,p.z+0.3));
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(archPts2),lineMat(ORANGE,0.12)));
-    // Railing posts (more of them)
-    for(let rp=-4;rp<=4;rp++){
-      const rpx=rx+rp*(bridgeLen*0.07);
+    // Railing posts
+    for(let rp=-2;rp<=2;rp++){
+      const rpx=rx+rp*(bridgeLen*0.12);
       destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(rpx,groundY+2.8,bz),new THREE.Vector3(rpx,groundY+4,bz)
       ]),lineMat(PALE,0.15)));
     }
-    // Top railing line
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(rx-bridgeLen*0.28,groundY+4,bz),new THREE.Vector3(rx+bridgeLen*0.28,groundY+4,bz)
-    ]),lineMat(WARM,0.2)));
-  });
+  }
 
   // === MAJESTIC MOUNTAINS in the background ===
-  // Many more mountain ranges with increasing height and variety
+  // Multiple mountain ranges with increasing height toward the back
   const mountainRanges=[
     {zBase:-85,layers:3,maxH:25,color:ORANGE,opacity:0.2},
     {zBase:-100,layers:3,maxH:40,color:GOLD,opacity:0.15},
     {zBase:-120,layers:3,maxH:60,color:WARM,opacity:0.1},
     {zBase:-145,layers:2,maxH:80,color:PALE,opacity:0.07},
-    {zBase:-165,layers:2,maxH:95,color:PALE,opacity:0.05},
-    {zBase:-180,layers:1,maxH:110,color:WHITE,opacity:0.04},
   ];
   mountainRanges.forEach(mr=>{
     for(let l=0;l<mr.layers;l++){
@@ -2038,233 +1792,69 @@ body {
       destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(mr.color,mr.opacity+l*0.02)));
     }
   });
-  // Snow-capped peaks on multiple tall ranges
-  [{zBase:-150,maxH:90,threshold:45},{zBase:-165,maxH:100,threshold:50},{zBase:-180,maxH:110,threshold:55}].forEach(sr=>{
-    for(let l=0;l<3;l++){
-      const pts=[];
-      for(let i=0;i<=120;i++){
-        const tx=i/120;
-        const x=(tx-0.5)*280;
-        const peak1=Math.pow(Math.max(0,Math.sin(tx*Math.PI*2.5+l*0.7)),1.5)*sr.maxH*0.8;
-        const peak2=Math.pow(Math.max(0,Math.sin(tx*Math.PI*4+l*1.3+0.5)),2)*sr.maxH*0.5;
-        const peak3=Math.pow(Math.max(0,Math.sin(tx*Math.PI*1.5+l*2.1)),1.2)*sr.maxH*0.6;
-        const baseH=Math.max(peak1,peak2,peak3)*0.7;
-        if(baseH>sr.threshold){
-          pts.push(new THREE.Vector3(x,groundY+baseH+l*2,sr.zBase-l*3));
-        }
-      }
-      if(pts.length>2){
-        destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat(WHITE,0.06+l*0.015)));
+  // Snow-capped peaks (bright lines on the tallest range)
+  for(let l=0;l<2;l++){
+    const pts=[];
+    for(let i=0;i<=120;i++){
+      const tx=i/120;
+      const x=(tx-0.5)*280;
+      const peak1=Math.pow(Math.max(0,Math.sin(tx*Math.PI*2.5+l*0.7)),1.5)*80*0.8;
+      const peak2=Math.pow(Math.max(0,Math.sin(tx*Math.PI*4+l*1.3+0.5)),2)*80*0.5;
+      const peak3=Math.pow(Math.max(0,Math.sin(tx*Math.PI*1.5+l*2.1)),1.2)*80*0.6;
+      const baseH=Math.max(peak1,peak2,peak3)*0.7;
+      if(baseH>40){
+        pts.push(new THREE.Vector3(x,groundY+baseH+l*2,-145-l*5));
       }
     }
-  });
-
-  // === Horizon glow (deeper, more layers) ===
-  for(let i=0;i<15;i++){
-    const hz=-185+i*3;
-    const op=0.14-i*0.008;
-    if(op>0){
-      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-180,groundY+0.5+i*0.2,hz),new THREE.Vector3(180,groundY+0.5+i*0.2,hz)
-      ]),lineMat(i<5?ORANGE:i<10?WARM:PALE,op)));
+    if(pts.length>2){
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat(WHITE,0.08+l*0.02)));
     }
   }
 
-  // === Sky stars (distant twinkling points above the city) ===
-  for(let i=0;i<80;i++){
-    const star=new THREE.Mesh(new THREE.SphereGeometry(0.08+Math.random()*0.15,4,4),
-      solidMat(WHITE,0.2+Math.random()*0.4));
-    star.position.set((Math.random()-0.5)*250,groundY+60+Math.random()*80,(Math.random()-0.5)*200-40);
-    destWorld.add(star);
+  // === Horizon glow ===
+  for(let i=0;i<5;i++){
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-150,groundY+0.5+i*0.3,-160+i*2),new THREE.Vector3(150,groundY+0.5+i*0.3,-160+i*2)
+    ]),lineMat(ORANGE,0.12-i*0.02)));
   }
 
-  // === Flying cars (many more at various altitudes and patterns) ===
+  // === Flying cars ===
   const flyingCars=[];
-  const carColors=[WARM,PALE,BRIGHT,0x66ccff,0xff6644,0x44ff88,ORANGE,GOLD];
-  for(let i=0;i<40;i++){
+  for(let i=0;i<35;i++){
     const carGroup=new THREE.Group();
-    const cc=carColors[Math.floor(Math.random()*carColors.length)];
-    const carBody=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),solidMat(cc,0.6));
+    const carBody=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),solidMat(Math.random()>0.5?WARM:PALE,0.6));
     carGroup.add(carBody);
     const windshield=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.25,0.52),solidMat(0x66ccff,0.4));
     windshield.position.x=0.2;windshield.position.y=0.15;carGroup.add(windshield);
-    const trailLen=1.5+Math.random()*2;
     const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-0.6,0,0),new THREE.Vector3(-0.6-trailLen,0,0)
-    ]),lineMat(cc,0.25));
+      new THREE.Vector3(-0.6,0,0),new THREE.Vector3(-2.5,0,0)
+    ]),lineMat(ORANGE,0.3));
     carGroup.add(trail);
-    const glow=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6),solidMat(cc,0.06));
+    const glow=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6),solidMat(ORANGE,0.08));
     glow.rotation.x=Math.PI/2;glow.position.y=-0.2;carGroup.add(glow);
-    // Headlights
-    const headlight=new THREE.Mesh(new THREE.SphereGeometry(0.08,4,4),solidMat(BRIGHT,0.9));
-    headlight.position.set(0.65,0,0.15);carGroup.add(headlight);
-    const headlight2=headlight.clone();headlight2.position.z=-0.15;carGroup.add(headlight2);
-    const altitude=groundY+8+Math.random()*60;
-    const radius=10+Math.random()*70;
-    const speed=(0.1+Math.random()*0.5)*(Math.random()>0.5?1:-1);
+    const altitude=groundY+15+Math.random()*40;
+    const radius=15+Math.random()*50;
+    const speed=0.15+Math.random()*0.4;
     const startAngle=Math.random()*Math.PI*2;
-    const yVar=Math.random()*4;
-    const centerZ=-30+Math.random()*20-10;
-    carGroup.position.set(Math.cos(startAngle)*radius,altitude,Math.sin(startAngle)*radius+centerZ);
+    const yVar=Math.random()*3;
+    carGroup.position.set(Math.cos(startAngle)*radius,altitude,Math.sin(startAngle)*radius-30);
     destWorld.add(carGroup);
-    flyingCars.push({mesh:carGroup,radius,speed,angle:startAngle,baseY:altitude,yVar,centerZ:centerZ});
+    flyingCars.push({mesh:carGroup,radius,speed,angle:startAngle,baseY:altitude,yVar});
   }
 
-  // === Streetlights along roads ===
-  for(let side=-1;side<=1;side+=2){
-    for(let sz=-60;sz<=60;sz+=15){
-      const lx=side*(riverWidth+18);
-      const pole=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(lx,groundY,sz),new THREE.Vector3(lx,groundY+4,sz)
-      ]),lineMat(GOLD,0.12));
-      destWorld.add(pole);
-      const arm=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(lx,groundY+4,sz),new THREE.Vector3(lx-side*1.5,groundY+4.2,sz)
-      ]),lineMat(GOLD,0.1));
-      destWorld.add(arm);
-      const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.25,6,4),solidMat(BRIGHT,0.6));
-      lamp.position.set(lx-side*1.5,groundY+4.2,sz);destWorld.add(lamp);
-    }
-  }
-
-  // === Trees / vegetation (wireframe cones + trunks) ===
-  for(let i=0;i<30;i++){
-    const tx=(Math.random()-0.5)*170;
-    const tz=(Math.random()-0.5)*140-20;
-    // Skip if too close to river
-    const nearRiver=riverPts.some(p=>Math.abs(p.x-tx)<riverWidth+2&&Math.abs(p.z-tz)<5);
-    if(nearRiver) continue;
-    const treeH=2+Math.random()*5;
-    const trunk=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(tx,groundY,tz),new THREE.Vector3(tx,groundY+treeH*0.4,tz)
-    ]),lineMat(0x886633,0.15));
-    destWorld.add(trunk);
-    const canopyGeo=new THREE.ConeGeometry(0.8+Math.random()*1.2,treeH*0.7,6);
-    const canopyPos=new THREE.Vector3(tx,groundY+treeH*0.4+treeH*0.35,tz);
-    const canopy=new THREE.LineSegments(new THREE.WireframeGeometry(canopyGeo),lineMat(0x448833,0.12));
-    canopy.position.copy(canopyPos);destWorld.add(canopy);
-  }
-
-  // === Floating lanterns / fireflies ===
-  const lanterns=[];
-  for(let i=0;i<25;i++){
-    const lx=(Math.random()-0.5)*140;
-    const ly=groundY+3+Math.random()*30;
-    const lz=(Math.random()-0.5)*120-20;
-    const lantern=new THREE.Mesh(new THREE.SphereGeometry(0.15+Math.random()*0.15,6,4),
-      solidMat(Math.random()>0.5?BRIGHT:0xff8844,0.7+Math.random()*0.3));
-    lantern.position.set(lx,ly,lz);
-    destWorld.add(lantern);
-    lanterns.push({mesh:lantern,baseY:ly,phase:Math.random()*Math.PI*2,speed:0.5+Math.random()*1.5,drift:0.3+Math.random()*0.8});
-  }
-
-  // === Boats on the river ===
-  const boats=[];
-  for(let i=0;i<12;i++){
-    const boatGroup=new THREE.Group();
-    // Hull
-    const hull=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-1,0,0),new THREE.Vector3(-0.7,-0.3,0),new THREE.Vector3(0.7,-0.3,0),new THREE.Vector3(1,0,0)
-    ]),lineMat(WARM,0.4));
-    boatGroup.add(hull);
-    // Sail/mast
-    if(Math.random()>0.4){
-      const mast=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0,0,0),new THREE.Vector3(0,1.5,0)
-      ]),lineMat(PALE,0.3));
-      boatGroup.add(mast);
-      const sail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0,1.5,0),new THREE.Vector3(0.6,0.5,0),new THREE.Vector3(0,0.3,0)
-      ]),lineMat(BRIGHT,0.25));
-      boatGroup.add(sail);
-    }
-    // Lantern on boat
-    const bLight=new THREE.Mesh(new THREE.SphereGeometry(0.12,4,4),solidMat(BRIGHT,0.8));
-    bLight.position.set(0,0.3,0);boatGroup.add(bLight);
-    const startIdx=10+Math.floor(Math.random()*80);
-    boatGroup.position.set(riverPts[startIdx].x,groundY+0.2,riverPts[startIdx].z);
-    boatGroup.scale.set(0.8+Math.random()*0.4,0.8+Math.random()*0.4,0.8+Math.random()*0.4);
-    destWorld.add(boatGroup);
-    boats.push({mesh:boatGroup,riverIdx:startIdx,speed:0.02+Math.random()*0.06,phase:Math.random()*Math.PI*2});
-  }
-
-  // === Clouds (many more, layered) ===
-  for(let i=0;i<40;i++){
-    const cs=3+Math.random()*10;
-    const cloud=new THREE.Mesh(new THREE.SphereGeometry(cs,10,6),solidMat(0xffeedd,0.02+Math.random()*0.02));
-    cloud.scale.set(2+Math.random()*1.5,0.3+Math.random()*0.25,1+Math.random()*0.6);
-    cloud.position.set((Math.random()-0.5)*200,groundY+40+Math.random()*50,(Math.random()-0.5)*150-20);
+  // === Clouds ===
+  for(let i=0;i<45;i++){
+    const cs=4+Math.random()*8;
+    const cloud=new THREE.Mesh(new THREE.SphereGeometry(cs,12,8),solidMat(0xffeedd,0.025+Math.random()*0.02));
+    cloud.scale.set(2+Math.random(),0.4+Math.random()*0.2,1+Math.random()*0.5);
+    cloud.position.set((Math.random()-0.5)*140,groundY+50+Math.random()*30,(Math.random()-0.5)*100-20);
     destWorld.add(cloud);
     for(let r=0;r<2;r++){
       const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
         new THREE.EllipseCurve(0,0,cs*(1.5-r*0.3),cs*(0.35-r*0.05),0,Math.PI*2,false,0).getPoints(40).map(p=>new THREE.Vector3(p.x,p.y,0))
-      ),lineMat(PALE,0.05+r*0.02));
+      ),lineMat(PALE,0.06+r*0.02));
       ring.position.copy(cloud.position);ring.rotation.x=Math.PI*0.5;destWorld.add(ring);
     }
-  }
-
-  // === Birds / flying creatures (V-shapes in the sky) ===
-  const birds=[];
-  for(let i=0;i<12;i++){
-    const birdGroup=new THREE.Group();
-    const wingSpan=0.5+Math.random()*0.8;
-    const wing1=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-wingSpan,0,0),new THREE.Vector3(0,wingSpan*0.3,0)
-    ]),lineMat(PALE,0.2));
-    const wing2=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0,wingSpan*0.3,0),new THREE.Vector3(wingSpan,0,0)
-    ]),lineMat(PALE,0.2));
-    birdGroup.add(wing1);birdGroup.add(wing2);
-    birdGroup.position.set((Math.random()-0.5)*120,groundY+35+Math.random()*40,(Math.random()-0.5)*100-30);
-    destWorld.add(birdGroup);
-    birds.push({mesh:birdGroup,phase:Math.random()*Math.PI*2,speed:0.8+Math.random()*1.5,radius:20+Math.random()*40,angle:Math.random()*Math.PI*2,baseY:birdGroup.position.y,orbSpeed:0.1+Math.random()*0.2});
-  }
-
-  // === Waterfalls on mountain faces ===
-  for(let i=0;i<3;i++){
-    const wx=-50+i*50;
-    const wz=-85-Math.random()*15;
-    const wh=15+Math.random()*25;
-    const wPts=[];
-    for(let w=0;w<=20;w++){
-      const t=w/20;
-      wPts.push(new THREE.Vector3(wx+Math.sin(t*Math.PI*3)*0.5,groundY+wh*(1-t),wz));
-    }
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(wPts),lineMat(0x66bbee,0.15)));
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(
-      wPts.map(p=>new THREE.Vector3(p.x+0.3,p.y+0.1,p.z))
-    ),lineMat(0x88ddff,0.1)));
-    // Splash pool at base
-    const splashGeo=new THREE.EllipseCurve(0,0,2,1.2,0,Math.PI*2,false,0).getPoints(20).map(p=>new THREE.Vector3(p.x+wx,groundY+0.1,p.y+wz));
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(splashGeo),lineMat(0x66bbee,0.1)));
-  }
-
-  // === Antenna / radio towers (tall, skeletal) ===
-  for(let i=0;i<4;i++){
-    const ax=(Math.random()-0.5)*160;
-    const az=-40-Math.random()*30;
-    const ah=50+Math.random()*30;
-    // Main mast
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(ax,groundY,az),new THREE.Vector3(ax,groundY+ah,az)
-    ]),lineMat(PALE,0.15)));
-    // Cross struts
-    for(let s=0;s<ah;s+=6){
-      const sw=3*(1-s/ah);
-      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(ax-sw,groundY+s,az),new THREE.Vector3(ax+sw,groundY+s,az)
-      ]),lineMat(GOLD,0.08)));
-      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(ax-sw,groundY+s,az),new THREE.Vector3(ax,groundY+s+6,az)
-      ]),lineMat(GOLD,0.06)));
-      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(ax+sw,groundY+s,az),new THREE.Vector3(ax,groundY+s+6,az)
-      ]),lineMat(GOLD,0.06)));
-    }
-    // Blinking top light
-    const aLight=new THREE.Mesh(new THREE.SphereGeometry(0.4,4,4),solidMat(0xff0000,0.9));
-    aLight.position.set(ax,groundY+ah,az);destWorld.add(aLight);
-    buildings.push({beacon:aLight,h:ah});
   }
 
   scene.add(destWorld);
@@ -2475,52 +2065,17 @@ body {
       for(const car of flyingCars){
         car.angle+=car.speed*0.016;
         car.mesh.position.x=Math.cos(car.angle)*car.radius;
-        car.mesh.position.z=Math.sin(car.angle)*car.radius+(car.centerZ||(-30));
+        car.mesh.position.z=Math.sin(car.angle)*car.radius-30;
         car.mesh.position.y=car.baseY+Math.sin(t*0.5+car.angle)*car.yVar;
-        car.mesh.rotation.y=car.angle+Math.PI*0.5*(car.speed>0?1:-1);
+        car.mesh.rotation.y=car.angle+Math.PI*0.5;
       }
       // Pulse building beacons
       for(const b of buildings){
         b.beacon.material.opacity=0.4+Math.sin(t*2+b.h)*0.4;
       }
-      // Animate lanterns
-      for(const ln of lanterns){
-        ln.mesh.position.y=ln.baseY+Math.sin(t*ln.speed+ln.phase)*ln.drift;
-        ln.mesh.material.opacity=0.5+Math.sin(t*1.5+ln.phase)*0.3;
-      }
-      // Animate boats drifting along river
-      for(const bt of boats){
-        bt.riverIdx=(bt.riverIdx+bt.speed)%riverPts.length;
-        const idx=Math.floor(bt.riverIdx);
-        const p=riverPts[Math.max(0,Math.min(idx,riverPts.length-1))];
-        if(p){
-          bt.mesh.position.x=p.x+Math.sin(t+bt.phase)*1.5;
-          bt.mesh.position.z=p.z;
-          bt.mesh.position.y=groundY+0.2+Math.sin(t*2+bt.phase)*0.15;
-          bt.mesh.rotation.y=Math.sin(t*0.5+bt.phase)*0.2;
-        }
-      }
-      // Animate birds
-      for(const bd of birds){
-        bd.angle+=bd.orbSpeed*0.016;
-        bd.mesh.position.x=Math.cos(bd.angle)*bd.radius;
-        bd.mesh.position.z=Math.sin(bd.angle)*bd.radius-30;
-        bd.mesh.position.y=bd.baseY+Math.sin(t*0.8+bd.phase)*3;
-        // Wing flap
-        const flap=Math.sin(t*bd.speed+bd.phase)*0.3;
-        bd.mesh.rotation.z=flap;
-      }
-      // Animate river — shimmer and wave motion
+      // Animate river shimmer
       for(const rs of riverShimmerLines){
-        rs.line.material.opacity=Math.max(0,Math.sin(t*2.5+rs.phase)*0.4);
-        // Animate wave positions
-        const pos=rs.geo.attributes.position;
-        for(let i=0;i<=20;i++){
-          const wt=i/20;
-          pos.setX(i,rs.baseX+(wt-0.5)*riverWidth*1.4);
-          pos.setY(i,groundY+0.12+Math.sin(wt*Math.PI*3+t*2+rs.phase)*0.5+Math.sin(wt*Math.PI*6-t*3)*0.2);
-        }
-        pos.needsUpdate=true;
+        rs.line.material.opacity=Math.max(0,Math.sin(t*3+rs.phase)*0.25);
       }
     } else {
       // Reset zoom state when leaving the slide
