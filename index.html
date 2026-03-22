@@ -976,11 +976,11 @@ body {
   // ═══════════════════════════════════════
   const L1=new THREE.Group();
 
-  // Animated wavy lake — positioned at bottom of view
+  // Animated ocean — dense rolling waves
   const lakeLines=[];
-  for(let r=0;r<80;r++){
-    const z=-15+r*1.2;const o=0.1+(r/40)*0.22;
-    const seg=80;const w=200;
+  for(let r=0;r<160;r++){
+    const z=-15+r*0.65;const o=0.08+(r/80)*0.24;
+    const seg=120;const w=240;
     const pts=[];
     for(let i=0;i<=seg;i++){const t=i/seg;const x=(t-0.5)*w;
       pts.push(new THREE.Vector3(x,-8,z));
@@ -1619,9 +1619,12 @@ body {
       const pos=lk.geo.attributes.position;
       for(let i=0;i<=lk.seg;i++){
         const xn=i/lk.seg;
-        const wave=Math.sin(xn*Math.PI*3+t*1.2+lk.r*0.15)*0.4
-                  +Math.sin(xn*Math.PI*7-t*0.8+lk.r*0.3)*0.15
-                  +Math.sin(xn*Math.PI*1.5+t*0.5)*0.25*(1+lk.r*0.01);
+        const d=1+lk.r*0.008;
+        const wave=Math.sin(xn*Math.PI*4+t*2.0+lk.r*0.18)*0.9*d
+                  +Math.sin(xn*Math.PI*9-t*1.5+lk.r*0.35)*0.4*d
+                  +Math.sin(xn*Math.PI*2+t*0.7+lk.r*0.08)*0.55*d
+                  +Math.sin(xn*Math.PI*14+t*2.8-lk.r*0.25)*0.2
+                  +Math.sin(xn*Math.PI*6.5-t*1.1+lk.r*0.5)*0.3;
         pos.setY(i,lk.baseY+wave);
       }
       pos.needsUpdate=true;
