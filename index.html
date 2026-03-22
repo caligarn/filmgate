@@ -942,7 +942,7 @@ body {
   const counter=document.getElementById('slideCounter'),progress=document.getElementById('progressBar');
   function goTo(n){if(n<0||n>=total)return;slides[current].classList.remove('active');slides[current].classList.add('prev');current=n;targetSlide=n;slides.forEach((s,i)=>{s.classList.remove('active','prev');if(i===current)s.classList.add('active')});counter.textContent=(current+1)+' / '+total;progress.style.width=((current/(total-1))*100)+'%'}
   function next(){goTo(current+1)}function prev(){goTo(current-1)}
-  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();prev()}});
+  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown'||e.key==='PageDown'||e.key==='Enter'||e.key==='n'||e.key==='N'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'||e.key==='Backspace'||e.key==='p'||e.key==='P'){e.preventDefault();prev()}});
   document.getElementById('nextBtn').addEventListener('click',next);document.getElementById('prevBtn').addEventListener('click',prev);
   document.addEventListener('click',e=>{if(e.target.closest('.slide-controls, a, button, #bgCanvas'))return;const deck=document.getElementById('deck');if(!deck.contains(e.target)&&e.target!==deck)return;if(e.clientX<window.innerWidth*0.3)prev();else next()});
   let touchStartX=0;document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX});document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-touchStartX;if(Math.abs(dx)>50){dx<0?next():prev()}});
@@ -1650,50 +1650,90 @@ body {
     buildings.push({beacon,h:h+5});
   }
 
-  // === LEFT BANK (x < -riverWidth) — classical European style ===
-  // Grand domed cathedral (center-left, most prominent)
+  // === LEFT BANK — FRONT ROW (near river) ===
+  addDomeBuilding(destWorld,-20,-20,7,30,8);
+  addDomeBuilding(destWorld,-35,-18,4,18,5);
+  addGothicTower(destWorld,-28,-25,3,28);
+  addTower(destWorld,-42,-15,2,20,false);
+  addBuilding(destWorld,-50,-18,new THREE.BoxGeometry(4,14,3),14,false);
+  addBuilding(destWorld,-15,-25,new THREE.BoxGeometry(3,12,3),12,false);
+
+  // === LEFT BANK — SECOND ROW ===
   addDomeBuilding(destWorld,-20,-35,7,30,8);
-  // Smaller domes nearby
-  addDomeBuilding(destWorld,-35,-25,4,18,5);
-  addDomeBuilding(destWorld,-15,-20,3,12,3.5);
-  // Gothic towers
+  addDomeBuilding(destWorld,-15,-30,3,12,3.5);
   addGothicTower(destWorld,-45,-35,5,50);
   addGothicTower(destWorld,-30,-45,4,38);
-  // Classical rectangular buildings of various heights
   addBuilding(destWorld,-55,-30,new THREE.BoxGeometry(6,35,5),35,true);
-  addBuilding(destWorld,-50,-20,new THREE.BoxGeometry(4,22,4),22,false);
-  addBuilding(destWorld,-25,-55,new THREE.BoxGeometry(5,28,5),28,false);
-  addBuilding(destWorld,-40,-15,new THREE.BoxGeometry(7,18,6),18,false);
-  addBuilding(destWorld,-60,-40,new THREE.BoxGeometry(5,25,4),25,false);
-  addBuilding(destWorld,-15,-50,new THREE.BoxGeometry(4,20,4),20,false);
-  // Round towers
-  addTower(destWorld,-48,-45,2.5,42,true);
-  addTower(destWorld,-18,-28,2,25,false);
+  addBuilding(destWorld,-50,-38,new THREE.BoxGeometry(4,22,4),22,false);
+  addBuilding(destWorld,-25,-40,new THREE.BoxGeometry(5,28,5),28,false);
+  addBuilding(destWorld,-40,-32,new THREE.BoxGeometry(7,18,6),18,false);
+  addTower(destWorld,-48,-42,2.5,42,true);
+  addTower(destWorld,-18,-38,2,25,false);
+  addPagoda(destWorld,-14,-42,5,30,4);
+  addDomeBuilding(destWorld,-60,-33,3,14,4);
 
-  // === RIGHT BANK (x > riverWidth) — diverse & exotic ===
-  // Large dome — mosque/basilica style
+  // === LEFT BANK — BACK ROW ===
+  addGothicTower(destWorld,-30,-52,5,55);
+  addBuilding(destWorld,-15,-50,new THREE.BoxGeometry(4,20,4),20,false);
+  addBuilding(destWorld,-60,-48,new THREE.BoxGeometry(5,25,4),25,false);
+  addTower(destWorld,-50,-55,2.5,38,true);
+  addBuilding(destWorld,-40,-55,new THREE.BoxGeometry(5,30,5),30,true);
+  addDomeBuilding(destWorld,-22,-58,4,20,5);
+  addPagoda(destWorld,-65,-52,5,35,4);
+
+  // === LEFT BANK — FAR BACK ===
+  addGothicTower(destWorld,-25,-68,6,65);
+  addBuilding(destWorld,-50,-65,new THREE.BoxGeometry(6,40,5),40,true);
+  addDomeBuilding(destWorld,-40,-70,5,24,6);
+  addTower(destWorld,-60,-68,3,45,true);
+  addPagoda(destWorld,-35,-72,6,42,5);
+
+  // === RIGHT BANK — FRONT ROW ===
+  addDomeBuilding(destWorld,22,-20,6,25,7);
+  addGothicTower(destWorld,28,-25,3,26);
+  addTower(destWorld,38,-18,2,20,false);
+  addPagoda(destWorld,50,-22,5,22,3);
+  addBuilding(destWorld,45,-15,new THREE.BoxGeometry(4,14,3),14,false);
+
+  // === RIGHT BANK — SECOND ROW ===
   addDomeBuilding(destWorld,22,-35,6,25,7);
-  // Pagoda
   addPagoda(destWorld,40,-30,7,45,5);
-  // Gothic spire
-  addGothicTower(destWorld,15,-25,4,55);
+  addGothicTower(destWorld,15,-40,4,55);
   addGothicTower(destWorld,55,-40,4.5,42);
-  // Cylindrical towers
-  addTower(destWorld,30,-20,3,35,true);
-  addTower(destWorld,50,-25,2,30,false);
+  addTower(destWorld,30,-32,3,35,true);
+  addTower(destWorld,50,-35,2,30,false);
   addTower(destWorld,60,-35,2.5,28,true);
-  // Rectangular buildings
-  addBuilding(destWorld,35,-45,new THREE.BoxGeometry(5,32,5),32,false);
-  addBuilding(destWorld,45,-15,new THREE.BoxGeometry(6,20,5),20,false);
-  addBuilding(destWorld,25,-50,new THREE.BoxGeometry(4,24,4),24,false);
-  addBuilding(destWorld,18,-45,new THREE.BoxGeometry(5,18,4),18,false);
-  addBuilding(destWorld,65,-28,new THREE.BoxGeometry(4,15,4),15,false);
-  // Small dome
-  addDomeBuilding(destWorld,48,-48,3,10,3);
+  addBuilding(destWorld,35,-42,new THREE.BoxGeometry(5,32,5),32,false);
+  addBuilding(destWorld,45,-38,new THREE.BoxGeometry(6,20,5),20,false);
+  addDomeBuilding(destWorld,65,-32,3,14,4);
+
+  // === RIGHT BANK — BACK ROW ===
+  addBuilding(destWorld,25,-52,new THREE.BoxGeometry(4,24,4),24,false);
+  addBuilding(destWorld,18,-48,new THREE.BoxGeometry(5,18,4),18,false);
+  addDomeBuilding(destWorld,48,-50,3,10,3);
+  addGothicTower(destWorld,42,-55,4,52);
+  addTower(destWorld,58,-52,3,36,true);
+  addPagoda(destWorld,22,-55,5,35,4);
+  addBuilding(destWorld,65,-48,new THREE.BoxGeometry(4,18,4),18,false);
+
+  // === RIGHT BANK — FAR BACK ===
+  addGothicTower(destWorld,28,-68,6,62);
+  addBuilding(destWorld,52,-65,new THREE.BoxGeometry(6,38,5),38,true);
+  addDomeBuilding(destWorld,42,-70,5,22,6);
+  addTower(destWorld,62,-68,3,42,true);
+  addPagoda(destWorld,38,-72,6,40,5);
+
+  // === FLANKS ===
+  addGothicTower(destWorld,-75,-35,4,32);
+  addTower(destWorld,-72,-50,2.5,22,true);
+  addBuilding(destWorld,-70,-25,new THREE.BoxGeometry(5,16,5),16,false);
+  addGothicTower(destWorld,75,-35,4,32);
+  addTower(destWorld,72,-50,2.5,22,true);
+  addBuilding(destWorld,70,-25,new THREE.BoxGeometry(5,16,5),16,false);
 
   // === BRIDGES crossing the river ===
-  for(let bi=0;bi<4;bi++){
-    const bz=-60+bi*35;
+  for(let bi=0;bi<8;bi++){
+    const bz=-70+bi*20;
     const idx=Math.floor((bz/280+0.5)*100);
     const cIdx=Math.max(0,Math.min(99,idx));
     const rx=riverPts[cIdx]?riverPts[cIdx].x:0;
@@ -1780,7 +1820,7 @@ body {
 
   // === Flying cars ===
   const flyingCars=[];
-  for(let i=0;i<18;i++){
+  for(let i=0;i<35;i++){
     const carGroup=new THREE.Group();
     const carBody=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),solidMat(Math.random()>0.5?WARM:PALE,0.6));
     carGroup.add(carBody);
@@ -1803,7 +1843,7 @@ body {
   }
 
   // === Clouds ===
-  for(let i=0;i<25;i++){
+  for(let i=0;i<45;i++){
     const cs=4+Math.random()*8;
     const cloud=new THREE.Mesh(new THREE.SphereGeometry(cs,12,8),solidMat(0xffeedd,0.025+Math.random()*0.02));
     cloud.scale.set(2+Math.random(),0.4+Math.random()*0.2,1+Math.random()*0.5);
