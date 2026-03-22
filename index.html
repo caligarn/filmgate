@@ -942,7 +942,7 @@ body {
   const counter=document.getElementById('slideCounter'),progress=document.getElementById('progressBar');
   function goTo(n){if(n<0||n>=total)return;slides[current].classList.remove('active');slides[current].classList.add('prev');current=n;targetSlide=n;slides.forEach((s,i)=>{s.classList.remove('active','prev');if(i===current)s.classList.add('active')});counter.textContent=(current+1)+' / '+total;progress.style.width=((current/(total-1))*100)+'%'}
   function next(){goTo(current+1)}function prev(){goTo(current-1)}
-  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();prev()}});
+  document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown'||e.key==='PageDown'||e.key==='Enter'||e.key==='n'||e.key==='N'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'||e.key==='Backspace'||e.key==='p'||e.key==='P'){e.preventDefault();prev()}});
   document.getElementById('nextBtn').addEventListener('click',next);document.getElementById('prevBtn').addEventListener('click',prev);
   document.addEventListener('click',e=>{if(e.target.closest('.slide-controls, a, button, #bgCanvas'))return;const deck=document.getElementById('deck');if(!deck.contains(e.target)&&e.target!==deck)return;if(e.clientX<window.innerWidth*0.3)prev();else next()});
   let touchStartX=0;document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX});document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-touchStartX;if(Math.abs(dx)>50){dx<0?next():prev()}});
@@ -1505,7 +1505,7 @@ body {
   }
   // Animated river wave lines (stored for animation — these move!)
   const riverShimmerLines=[];
-  for(let i=0;i<30;i++){
+  for(let i=0;i<80;i++){
     const idx=Math.floor(Math.random()*80)+10;
     const p=riverPts[idx];
     // Wavy cross-river line
@@ -1843,47 +1843,180 @@ body {
     buildings.push({beacon,h:h+2});
   }
 
-  // === LEFT BANK — classical + exotic mix ===
-  addDomeBuilding(destWorld,-22,-35,7,30,8);  // Grand dome cathedral
-  addDomeBuilding(destWorld,-38,-25,4,18,5);
-  addOnionDome(destWorld,-16,-22,3,14,4);     // Onion dome
-  addGothicTower(destWorld,-48,-35,5,50);
-  addGothicTower(destWorld,-32,-48,4,38);
-  addArtDeco(destWorld,-55,-30,7,45);         // Art Deco tower
-  addBuilding(destWorld,-52,-20,new THREE.BoxGeometry(4,22,4),22,false);
-  addBuilding(destWorld,-27,-55,new THREE.BoxGeometry(5,28,5),28,false);
-  addHexTower(destWorld,-42,-15,3.5,30,true); // Hexagonal tower
-  addBuilding(destWorld,-62,-40,new THREE.BoxGeometry(5,25,4),25,false);
-  addBuilding(destWorld,-17,-50,new THREE.BoxGeometry(4,20,4),20,false);
-  addTower(destWorld,-50,-45,2.5,42,true);
-  addMinaret(destWorld,-20,-30,2,35);         // Minaret
-  addPyramid(destWorld,-60,-50,10,20,5);      // Small pyramid
+  // === LEFT BANK — FRONT ROW (closest to river, z ~ -15 to -30) ===
+  addDomeBuilding(destWorld,-22,-20,7,30,8);
+  addOnionDome(destWorld,-16,-17,3,14,4);
+  addBuilding(destWorld,-30,-18,new THREE.BoxGeometry(3,16,3),16,true);
+  addTower(destWorld,-36,-22,2,20,false);
+  addHexTower(destWorld,-42,-15,3.5,30,true);
+  addMinaret(destWorld,-12,-25,1.5,22);
+  addBuilding(destWorld,-48,-18,new THREE.BoxGeometry(4,12,3),12,false);
+  addGothicTower(destWorld,-26,-28,3,28);
+  addPagoda(destWorld,-54,-22,5,25,3);
+  addArtDeco(destWorld,-18,-28,4,20);
+  addBuilding(destWorld,-40,-26,new THREE.BoxGeometry(3,10,3),10,false);
+  addOnionDome(destWorld,-34,-15,2,10,3);
+  addTower(destWorld,-58,-25,1.8,18,true);
+  addBuilding(destWorld,-62,-18,new THREE.BoxGeometry(3,14,3),14,false);
 
-  // === RIGHT BANK — diverse global styles ===
-  addDomeBuilding(destWorld,24,-35,6,25,7);   // Large dome
-  addPagoda(destWorld,42,-30,7,45,5);         // Pagoda
-  addOnionDome(destWorld,18,-22,3.5,20,5);    // Onion dome
+  // === LEFT BANK — SECOND ROW (z ~ -30 to -45) ===
+  addDomeBuilding(destWorld,-22,-35,7,30,8);
+  addDomeBuilding(destWorld,-38,-32,4,18,5);
+  addGothicTower(destWorld,-48,-35,5,50);
+  addGothicTower(destWorld,-32,-42,4,38);
+  addArtDeco(destWorld,-55,-30,7,45);
+  addBuilding(destWorld,-52,-38,new THREE.BoxGeometry(4,22,4),22,false);
+  addMinaret(destWorld,-20,-38,2,35);
+  addBuilding(destWorld,-27,-40,new THREE.BoxGeometry(5,28,5),28,false);
+  addTower(destWorld,-44,-36,3,36,true);
+  addPagoda(destWorld,-14,-42,6,35,4);
+  addOnionDome(destWorld,-60,-33,3,16,4.5);
+  addHexTower(destWorld,-36,-44,2.5,26,false);
+  addBuilding(destWorld,-66,-38,new THREE.BoxGeometry(4,20,4),20,true);
+  addDomeBuilding(destWorld,-50,-42,3.5,14,4);
+  addBuilding(destWorld,-28,-34,new THREE.BoxGeometry(3,32,3),32,true);
+  addMinaret(destWorld,-42,-30,1.5,28);
+  addGothicTower(destWorld,-18,-44,3.5,32);
+
+  // === LEFT BANK — BACK ROW (z ~ -45 to -65) ===
+  addGothicTower(destWorld,-30,-52,5,60);
+  addBuilding(destWorld,-17,-50,new THREE.BoxGeometry(4,20,4),20,false);
+  addPyramid(destWorld,-60,-50,10,20,5);
+  addTower(destWorld,-50,-48,2.5,42,true);
+  addArtDeco(destWorld,-24,-55,5,55);
+  addDomeBuilding(destWorld,-40,-54,5,22,6);
+  addOnionDome(destWorld,-56,-52,3.5,18,5);
+  addBuilding(destWorld,-46,-58,new THREE.BoxGeometry(6,35,5),35,true);
+  addHexTower(destWorld,-34,-60,3,28,true);
+  addPagoda(destWorld,-64,-55,6,40,5);
+  addMinaret(destWorld,-20,-58,2,40);
+  addBuilding(destWorld,-52,-62,new THREE.BoxGeometry(4,24,4),24,false);
+  addGothicTower(destWorld,-14,-55,4,45);
+  addBuilding(destWorld,-68,-48,new THREE.BoxGeometry(5,18,5),18,false);
+  addDomeBuilding(destWorld,-44,-65,4,20,5);
+  addOnionDome(destWorld,-28,-62,2.5,12,3.5);
+  addTower(destWorld,-58,-60,2,32,false);
+  addArtDeco(destWorld,-38,-58,4,38);
+
+  // === LEFT BANK — FAR BACK (z ~ -65 to -80) ===
+  addGothicTower(destWorld,-25,-70,6,70);
+  addArtDeco(destWorld,-50,-68,8,60);
+  addPyramid(destWorld,-40,-72,14,30,6);
+  addDomeBuilding(destWorld,-62,-70,6,28,8);
+  addBuilding(destWorld,-16,-68,new THREE.BoxGeometry(5,40,5),40,true);
+  addTower(destWorld,-34,-75,3,50,true);
+  addOnionDome(destWorld,-55,-75,4,24,6);
+  addPagoda(destWorld,-45,-78,7,50,6);
+  addHexTower(destWorld,-68,-72,3.5,35,false);
+  addMinaret(destWorld,-30,-78,2.5,45);
+
+  // === RIGHT BANK — FRONT ROW (z ~ -15 to -30) ===
+  addDomeBuilding(destWorld,24,-20,6,25,7);
+  addOnionDome(destWorld,18,-17,3.5,20,5);
+  addBuilding(destWorld,32,-18,new THREE.BoxGeometry(3,15,3),15,true);
+  addTower(destWorld,38,-22,2,22,false);
+  addMinaret(destWorld,14,-25,1.5,20);
+  addHexTower(destWorld,44,-15,3,24,true);
+  addBuilding(destWorld,50,-20,new THREE.BoxGeometry(4,12,3),12,false);
+  addGothicTower(destWorld,28,-28,3,26);
+  addPagoda(destWorld,56,-22,5,22,3);
+  addArtDeco(destWorld,20,-28,4,18);
+  addOnionDome(destWorld,36,-15,2,10,3);
+  addBuilding(destWorld,62,-18,new THREE.BoxGeometry(3,14,3),14,false);
+  addTower(destWorld,48,-26,1.8,16,false);
+  addDomeBuilding(destWorld,58,-24,2.5,10,3);
+
+  // === RIGHT BANK — SECOND ROW (z ~ -30 to -45) ===
+  addDomeBuilding(destWorld,24,-35,6,25,7);
+  addPagoda(destWorld,42,-30,7,45,5);
   addGothicTower(destWorld,16,-40,4,55);
   addGothicTower(destWorld,58,-40,4.5,42);
-  addTower(destWorld,32,-20,3,35,true);
-  addHexTower(destWorld,52,-25,2.5,32,true);  // Hex tower
-  addMinaret(destWorld,62,-35,2,38);          // Minaret
-  addArtDeco(destWorld,38,-48,6,50);          // Art Deco
-  addBuilding(destWorld,48,-15,new THREE.BoxGeometry(6,20,5),20,false);
-  addBuilding(destWorld,27,-52,new THREE.BoxGeometry(4,24,4),24,false);
-  addPyramid(destWorld,70,-45,12,25,6);       // Ziggurat
-  addOnionDome(destWorld,50,-50,2.5,12,3.5);  // Small onion dome
-  addBuilding(destWorld,20,-48,new THREE.BoxGeometry(5,18,4),18,false);
-  addDomeBuilding(destWorld,65,-28,3,12,3.5);
+  addTower(destWorld,32,-32,3,35,true);
+  addHexTower(destWorld,52,-35,2.5,32,true);
+  addMinaret(destWorld,62,-35,2,38);
+  addArtDeco(destWorld,38,-42,6,50);
+  addBuilding(destWorld,48,-38,new THREE.BoxGeometry(6,20,5),20,false);
+  addOnionDome(destWorld,28,-38,3,18,4.5);
+  addDomeBuilding(destWorld,66,-32,3.5,16,4);
+  addBuilding(destWorld,20,-42,new THREE.BoxGeometry(4,24,4),24,true);
+  addPagoda(destWorld,54,-44,5,30,4);
+  addTower(destWorld,40,-36,2.5,28,false);
+  addGothicTower(destWorld,70,-38,3.5,36);
+  addMinaret(destWorld,34,-44,1.5,30);
+  addBuilding(destWorld,46,-32,new THREE.BoxGeometry(3,22,3),22,false);
 
-  // === BRIDGES crossing the river ===
-  for(let bi=0;bi<4;bi++){
-    const bz=-60+bi*35;
+  // === RIGHT BANK — BACK ROW (z ~ -45 to -65) ===
+  addBuilding(destWorld,27,-52,new THREE.BoxGeometry(4,24,4),24,false);
+  addPyramid(destWorld,70,-50,12,25,6);
+  addOnionDome(destWorld,50,-50,2.5,12,3.5);
+  addBuilding(destWorld,20,-48,new THREE.BoxGeometry(5,18,4),18,false);
+  addDomeBuilding(destWorld,65,-48,3,12,3.5);
+  addArtDeco(destWorld,36,-55,5,48);
+  addGothicTower(destWorld,44,-52,4,58);
+  addTower(destWorld,58,-56,3,40,true);
+  addHexTower(destWorld,30,-58,3,26,true);
+  addPagoda(destWorld,22,-55,6,38,5);
+  addMinaret(destWorld,52,-60,2,36);
+  addBuilding(destWorld,40,-62,new THREE.BoxGeometry(5,30,5),30,true);
+  addOnionDome(destWorld,64,-55,3,20,5);
+  addDomeBuilding(destWorld,48,-58,4,18,5);
+  addBuilding(destWorld,72,-52,new THREE.BoxGeometry(4,22,4),22,false);
+  addGothicTower(destWorld,16,-58,3.5,42);
+  addTower(destWorld,60,-62,2,34,false);
+  addPyramid(destWorld,34,-60,8,18,4);
+
+  // === RIGHT BANK — FAR BACK (z ~ -65 to -80) ===
+  addGothicTower(destWorld,28,-70,6,68);
+  addArtDeco(destWorld,52,-68,8,58);
+  addPyramid(destWorld,42,-72,14,28,6);
+  addDomeBuilding(destWorld,64,-70,6,26,8);
+  addBuilding(destWorld,18,-68,new THREE.BoxGeometry(5,38,5),38,true);
+  addTower(destWorld,36,-75,3,48,true);
+  addOnionDome(destWorld,56,-75,4,22,6);
+  addPagoda(destWorld,46,-78,7,48,6);
+  addHexTower(destWorld,68,-72,3.5,33,false);
+  addMinaret(destWorld,32,-78,2.5,43);
+
+  // === CENTER — scattered structures near river edges ===
+  addBuilding(destWorld,-8,-20,new THREE.BoxGeometry(2,8,2),8,false);
+  addBuilding(destWorld,8,-20,new THREE.BoxGeometry(2,8,2),8,false);
+  addTower(destWorld,-5,-35,1.5,12,false);
+  addTower(destWorld,5,-35,1.5,12,false);
+  addMinaret(destWorld,-10,-50,1,15);
+  addMinaret(destWorld,10,-50,1,15);
+  addOnionDome(destWorld,-6,-65,1.5,8,2.5);
+  addOnionDome(destWorld,6,-65,1.5,8,2.5);
+
+  // === DISTANT FLANKS — far left & right edge buildings ===
+  addBuilding(destWorld,-75,-25,new THREE.BoxGeometry(5,15,5),15,false);
+  addGothicTower(destWorld,-80,-35,4,35);
+  addTower(destWorld,-78,-50,2.5,25,true);
+  addDomeBuilding(destWorld,-72,-60,3,12,4);
+  addArtDeco(destWorld,-85,-42,5,30);
+  addPagoda(destWorld,-82,-55,5,28,4);
+  addBuilding(destWorld,-88,-30,new THREE.BoxGeometry(4,18,4),18,false);
+  addHexTower(destWorld,-76,-68,2.5,20,false);
+  addMinaret(destWorld,-90,-48,1.5,22);
+  addOnionDome(destWorld,-84,-62,2,10,3);
+  addBuilding(destWorld,75,-25,new THREE.BoxGeometry(5,15,5),15,false);
+  addGothicTower(destWorld,80,-35,4,35);
+  addTower(destWorld,78,-50,2.5,25,true);
+  addDomeBuilding(destWorld,72,-60,3,12,4);
+  addArtDeco(destWorld,85,-42,5,30);
+  addPagoda(destWorld,82,-55,5,28,4);
+  addBuilding(destWorld,88,-30,new THREE.BoxGeometry(4,18,4),18,false);
+  addHexTower(destWorld,76,-68,2.5,20,false);
+  addMinaret(destWorld,90,-48,1.5,22);
+  addOnionDome(destWorld,84,-62,2,10,3);
+
+  // === BRIDGES crossing the river (many more!) ===
+  const bridgePositions=[-75,-60,-45,-30,-18,-5,10,22,35,48,60,75];
+  bridgePositions.forEach(bz=>{
     const idx=Math.floor((bz/280+0.5)*100);
     const cIdx=Math.max(0,Math.min(99,idx));
     const rx=riverPts[cIdx]?riverPts[cIdx].x:0;
-    // Bridge deck
     const bridgeLen=riverWidth*3;
+    // Bridge deck
     const bridge=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(rx-bridgeLen/2,groundY+1.5,bz),
       new THREE.Vector3(rx-bridgeLen*0.15,groundY+3,bz),
@@ -1891,6 +2024,14 @@ body {
       new THREE.Vector3(rx+bridgeLen/2,groundY+1.5,bz)
     ]),lineMat(WARM,0.35));
     destWorld.add(bridge);
+    // Second deck line for thickness
+    const bridge2=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(rx-bridgeLen/2,groundY+1.3,bz+0.3),
+      new THREE.Vector3(rx-bridgeLen*0.15,groundY+2.8,bz+0.3),
+      new THREE.Vector3(rx+bridgeLen*0.15,groundY+2.8,bz+0.3),
+      new THREE.Vector3(rx+bridgeLen/2,groundY+1.3,bz+0.3)
+    ]),lineMat(GOLD,0.2));
+    destWorld.add(bridge2);
     // Bridge arch underneath
     const archPts=[];
     for(let ai=0;ai<=20;ai++){
@@ -1900,22 +2041,34 @@ body {
       archPts.push(new THREE.Vector3(ax,ay,bz));
     }
     destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(archPts),lineMat(GOLD,0.2)));
-    // Railing posts
-    for(let rp=-2;rp<=2;rp++){
-      const rpx=rx+rp*(bridgeLen*0.12);
+    // Second arch
+    const archPts2=archPts.map(p=>new THREE.Vector3(p.x,p.y-0.3,p.z+0.3));
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(archPts2),lineMat(ORANGE,0.12)));
+    // Railing posts (more of them)
+    for(let rp=-4;rp<=4;rp++){
+      const rpx=rx+rp*(bridgeLen*0.07);
       destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(rpx,groundY+2.8,bz),new THREE.Vector3(rpx,groundY+4,bz)
       ]),lineMat(PALE,0.15)));
     }
-  }
+    // Top railing line
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(rx-bridgeLen*0.28,groundY+4,bz),new THREE.Vector3(rx+bridgeLen*0.28,groundY+4,bz)
+    ]),lineMat(WARM,0.2)));
+  });
 
   // === MAJESTIC MOUNTAINS in the background ===
-  // Multiple mountain ranges with increasing height toward the back
+  // Many more mountain ranges with increasing height and variety
   const mountainRanges=[
-    {zBase:-85,layers:3,maxH:25,color:ORANGE,opacity:0.2},
-    {zBase:-100,layers:3,maxH:40,color:GOLD,opacity:0.15},
-    {zBase:-120,layers:3,maxH:60,color:WARM,opacity:0.1},
-    {zBase:-145,layers:2,maxH:80,color:PALE,opacity:0.07},
+    {zBase:-82,layers:3,maxH:18,color:ORANGE,opacity:0.22},
+    {zBase:-90,layers:3,maxH:28,color:ORANGE,opacity:0.2},
+    {zBase:-100,layers:4,maxH:40,color:GOLD,opacity:0.17},
+    {zBase:-112,layers:3,maxH:50,color:GOLD,opacity:0.14},
+    {zBase:-125,layers:4,maxH:65,color:WARM,opacity:0.11},
+    {zBase:-138,layers:3,maxH:75,color:WARM,opacity:0.09},
+    {zBase:-150,layers:3,maxH:90,color:PALE,opacity:0.07},
+    {zBase:-165,layers:2,maxH:100,color:PALE,opacity:0.05},
+    {zBase:-180,layers:2,maxH:110,color:WHITE,opacity:0.04},
   ];
   mountainRanges.forEach(mr=>{
     for(let l=0;l<mr.layers;l++){
@@ -1937,69 +2090,233 @@ body {
       destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(mr.color,mr.opacity+l*0.02)));
     }
   });
-  // Snow-capped peaks (bright lines on the tallest range)
-  for(let l=0;l<2;l++){
-    const pts=[];
-    for(let i=0;i<=120;i++){
-      const tx=i/120;
-      const x=(tx-0.5)*280;
-      const peak1=Math.pow(Math.max(0,Math.sin(tx*Math.PI*2.5+l*0.7)),1.5)*80*0.8;
-      const peak2=Math.pow(Math.max(0,Math.sin(tx*Math.PI*4+l*1.3+0.5)),2)*80*0.5;
-      const peak3=Math.pow(Math.max(0,Math.sin(tx*Math.PI*1.5+l*2.1)),1.2)*80*0.6;
-      const baseH=Math.max(peak1,peak2,peak3)*0.7;
-      if(baseH>40){
-        pts.push(new THREE.Vector3(x,groundY+baseH+l*2,-145-l*5));
+  // Snow-capped peaks on multiple tall ranges
+  [{zBase:-150,maxH:90,threshold:45},{zBase:-165,maxH:100,threshold:50},{zBase:-180,maxH:110,threshold:55}].forEach(sr=>{
+    for(let l=0;l<3;l++){
+      const pts=[];
+      for(let i=0;i<=120;i++){
+        const tx=i/120;
+        const x=(tx-0.5)*280;
+        const peak1=Math.pow(Math.max(0,Math.sin(tx*Math.PI*2.5+l*0.7)),1.5)*sr.maxH*0.8;
+        const peak2=Math.pow(Math.max(0,Math.sin(tx*Math.PI*4+l*1.3+0.5)),2)*sr.maxH*0.5;
+        const peak3=Math.pow(Math.max(0,Math.sin(tx*Math.PI*1.5+l*2.1)),1.2)*sr.maxH*0.6;
+        const baseH=Math.max(peak1,peak2,peak3)*0.7;
+        if(baseH>sr.threshold){
+          pts.push(new THREE.Vector3(x,groundY+baseH+l*2,sr.zBase-l*3));
+        }
+      }
+      if(pts.length>2){
+        destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat(WHITE,0.06+l*0.015)));
       }
     }
-    if(pts.length>2){
-      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat(WHITE,0.08+l*0.02)));
+  });
+
+  // === Horizon glow (deeper, more layers) ===
+  for(let i=0;i<15;i++){
+    const hz=-185+i*3;
+    const op=0.14-i*0.008;
+    if(op>0){
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-180,groundY+0.5+i*0.2,hz),new THREE.Vector3(180,groundY+0.5+i*0.2,hz)
+      ]),lineMat(i<5?ORANGE:i<10?WARM:PALE,op)));
     }
   }
 
-  // === Horizon glow ===
-  for(let i=0;i<5;i++){
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-150,groundY+0.5+i*0.3,-160+i*2),new THREE.Vector3(150,groundY+0.5+i*0.3,-160+i*2)
-    ]),lineMat(ORANGE,0.12-i*0.02)));
+  // === Sky stars (distant twinkling points above the city) ===
+  for(let i=0;i<200;i++){
+    const star=new THREE.Mesh(new THREE.SphereGeometry(0.08+Math.random()*0.15,4,4),
+      solidMat(WHITE,0.2+Math.random()*0.4));
+    star.position.set((Math.random()-0.5)*250,groundY+60+Math.random()*80,(Math.random()-0.5)*200-40);
+    destWorld.add(star);
   }
 
-  // === Flying cars ===
+  // === Flying cars (many more at various altitudes and patterns) ===
   const flyingCars=[];
-  for(let i=0;i<18;i++){
+  const carColors=[WARM,PALE,BRIGHT,0x66ccff,0xff6644,0x44ff88,ORANGE,GOLD];
+  for(let i=0;i<90;i++){
     const carGroup=new THREE.Group();
-    const carBody=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),solidMat(Math.random()>0.5?WARM:PALE,0.6));
+    const cc=carColors[Math.floor(Math.random()*carColors.length)];
+    const carBody=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),solidMat(cc,0.6));
     carGroup.add(carBody);
     const windshield=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.25,0.52),solidMat(0x66ccff,0.4));
     windshield.position.x=0.2;windshield.position.y=0.15;carGroup.add(windshield);
+    const trailLen=1.5+Math.random()*2;
     const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-0.6,0,0),new THREE.Vector3(-2.5,0,0)
-    ]),lineMat(ORANGE,0.3));
+      new THREE.Vector3(-0.6,0,0),new THREE.Vector3(-0.6-trailLen,0,0)
+    ]),lineMat(cc,0.25));
     carGroup.add(trail);
-    const glow=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6),solidMat(ORANGE,0.08));
+    const glow=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6),solidMat(cc,0.06));
     glow.rotation.x=Math.PI/2;glow.position.y=-0.2;carGroup.add(glow);
-    const altitude=groundY+15+Math.random()*40;
-    const radius=15+Math.random()*50;
-    const speed=0.15+Math.random()*0.4;
+    // Headlights
+    const headlight=new THREE.Mesh(new THREE.SphereGeometry(0.08,4,4),solidMat(BRIGHT,0.9));
+    headlight.position.set(0.65,0,0.15);carGroup.add(headlight);
+    const headlight2=headlight.clone();headlight2.position.z=-0.15;carGroup.add(headlight2);
+    const altitude=groundY+8+Math.random()*60;
+    const radius=10+Math.random()*70;
+    const speed=(0.1+Math.random()*0.5)*(Math.random()>0.5?1:-1);
     const startAngle=Math.random()*Math.PI*2;
-    const yVar=Math.random()*3;
-    carGroup.position.set(Math.cos(startAngle)*radius,altitude,Math.sin(startAngle)*radius-30);
+    const yVar=Math.random()*4;
+    const centerZ=-30+Math.random()*20-10;
+    carGroup.position.set(Math.cos(startAngle)*radius,altitude,Math.sin(startAngle)*radius+centerZ);
     destWorld.add(carGroup);
-    flyingCars.push({mesh:carGroup,radius,speed,angle:startAngle,baseY:altitude,yVar});
+    flyingCars.push({mesh:carGroup,radius,speed,angle:startAngle,baseY:altitude,yVar,centerZ:centerZ});
   }
 
-  // === Clouds ===
-  for(let i=0;i<25;i++){
-    const cs=4+Math.random()*8;
-    const cloud=new THREE.Mesh(new THREE.SphereGeometry(cs,12,8),solidMat(0xffeedd,0.025+Math.random()*0.02));
-    cloud.scale.set(2+Math.random(),0.4+Math.random()*0.2,1+Math.random()*0.5);
-    cloud.position.set((Math.random()-0.5)*140,groundY+50+Math.random()*30,(Math.random()-0.5)*100-20);
+  // === Streetlights along roads ===
+  for(let side=-1;side<=1;side+=2){
+    for(let sz=-70;sz<=70;sz+=8){
+      const lx=side*(riverWidth+18);
+      const pole=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(lx,groundY,sz),new THREE.Vector3(lx,groundY+4,sz)
+      ]),lineMat(GOLD,0.12));
+      destWorld.add(pole);
+      const arm=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(lx,groundY+4,sz),new THREE.Vector3(lx-side*1.5,groundY+4.2,sz)
+      ]),lineMat(GOLD,0.1));
+      destWorld.add(arm);
+      const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.25,6,4),solidMat(BRIGHT,0.6));
+      lamp.position.set(lx-side*1.5,groundY+4.2,sz);destWorld.add(lamp);
+    }
+  }
+
+  // === Trees / vegetation (wireframe cones + trunks) ===
+  for(let i=0;i<80;i++){
+    const tx=(Math.random()-0.5)*170;
+    const tz=(Math.random()-0.5)*140-20;
+    // Skip if too close to river
+    const nearRiver=riverPts.some(p=>Math.abs(p.x-tx)<riverWidth+2&&Math.abs(p.z-tz)<5);
+    if(nearRiver) continue;
+    const treeH=2+Math.random()*5;
+    const trunk=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(tx,groundY,tz),new THREE.Vector3(tx,groundY+treeH*0.4,tz)
+    ]),lineMat(0x886633,0.15));
+    destWorld.add(trunk);
+    const canopyGeo=new THREE.ConeGeometry(0.8+Math.random()*1.2,treeH*0.7,6);
+    const canopyPos=new THREE.Vector3(tx,groundY+treeH*0.4+treeH*0.35,tz);
+    const canopy=new THREE.LineSegments(new THREE.WireframeGeometry(canopyGeo),lineMat(0x448833,0.12));
+    canopy.position.copy(canopyPos);destWorld.add(canopy);
+  }
+
+  // === Floating lanterns / fireflies ===
+  const lanterns=[];
+  for(let i=0;i<60;i++){
+    const lx=(Math.random()-0.5)*140;
+    const ly=groundY+3+Math.random()*30;
+    const lz=(Math.random()-0.5)*120-20;
+    const lantern=new THREE.Mesh(new THREE.SphereGeometry(0.15+Math.random()*0.15,6,4),
+      solidMat(Math.random()>0.5?BRIGHT:0xff8844,0.7+Math.random()*0.3));
+    lantern.position.set(lx,ly,lz);
+    destWorld.add(lantern);
+    lanterns.push({mesh:lantern,baseY:ly,phase:Math.random()*Math.PI*2,speed:0.5+Math.random()*1.5,drift:0.3+Math.random()*0.8});
+  }
+
+  // === Boats on the river ===
+  const boats=[];
+  for(let i=0;i<12;i++){
+    const boatGroup=new THREE.Group();
+    // Hull
+    const hull=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-1,0,0),new THREE.Vector3(-0.7,-0.3,0),new THREE.Vector3(0.7,-0.3,0),new THREE.Vector3(1,0,0)
+    ]),lineMat(WARM,0.4));
+    boatGroup.add(hull);
+    // Sail/mast
+    if(Math.random()>0.4){
+      const mast=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0,0,0),new THREE.Vector3(0,1.5,0)
+      ]),lineMat(PALE,0.3));
+      boatGroup.add(mast);
+      const sail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0,1.5,0),new THREE.Vector3(0.6,0.5,0),new THREE.Vector3(0,0.3,0)
+      ]),lineMat(BRIGHT,0.25));
+      boatGroup.add(sail);
+    }
+    // Lantern on boat
+    const bLight=new THREE.Mesh(new THREE.SphereGeometry(0.12,4,4),solidMat(BRIGHT,0.8));
+    bLight.position.set(0,0.3,0);boatGroup.add(bLight);
+    const startIdx=10+Math.floor(Math.random()*80);
+    boatGroup.position.set(riverPts[startIdx].x,groundY+0.2,riverPts[startIdx].z);
+    boatGroup.scale.set(0.8+Math.random()*0.4,0.8+Math.random()*0.4,0.8+Math.random()*0.4);
+    destWorld.add(boatGroup);
+    boats.push({mesh:boatGroup,riverIdx:startIdx,speed:0.02+Math.random()*0.06,phase:Math.random()*Math.PI*2});
+  }
+
+  // === Clouds (many more, layered) ===
+  for(let i=0;i<100;i++){
+    const cs=3+Math.random()*10;
+    const cloud=new THREE.Mesh(new THREE.SphereGeometry(cs,10,6),solidMat(0xffeedd,0.02+Math.random()*0.02));
+    cloud.scale.set(2+Math.random()*1.5,0.3+Math.random()*0.25,1+Math.random()*0.6);
+    cloud.position.set((Math.random()-0.5)*200,groundY+40+Math.random()*50,(Math.random()-0.5)*150-20);
     destWorld.add(cloud);
     for(let r=0;r<2;r++){
       const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
         new THREE.EllipseCurve(0,0,cs*(1.5-r*0.3),cs*(0.35-r*0.05),0,Math.PI*2,false,0).getPoints(40).map(p=>new THREE.Vector3(p.x,p.y,0))
-      ),lineMat(PALE,0.06+r*0.02));
+      ),lineMat(PALE,0.05+r*0.02));
       ring.position.copy(cloud.position);ring.rotation.x=Math.PI*0.5;destWorld.add(ring);
     }
+  }
+
+  // === Birds / flying creatures (V-shapes in the sky) ===
+  const birds=[];
+  for(let i=0;i<30;i++){
+    const birdGroup=new THREE.Group();
+    const wingSpan=0.5+Math.random()*0.8;
+    const wing1=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-wingSpan,0,0),new THREE.Vector3(0,wingSpan*0.3,0)
+    ]),lineMat(PALE,0.2));
+    const wing2=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0,wingSpan*0.3,0),new THREE.Vector3(wingSpan,0,0)
+    ]),lineMat(PALE,0.2));
+    birdGroup.add(wing1);birdGroup.add(wing2);
+    birdGroup.position.set((Math.random()-0.5)*120,groundY+35+Math.random()*40,(Math.random()-0.5)*100-30);
+    destWorld.add(birdGroup);
+    birds.push({mesh:birdGroup,phase:Math.random()*Math.PI*2,speed:0.8+Math.random()*1.5,radius:20+Math.random()*40,angle:Math.random()*Math.PI*2,baseY:birdGroup.position.y,orbSpeed:0.1+Math.random()*0.2});
+  }
+
+  // === Waterfalls on mountain faces ===
+  for(let i=0;i<6;i++){
+    const wx=-80+i*32;
+    const wz=-85-Math.random()*15;
+    const wh=15+Math.random()*25;
+    const wPts=[];
+    for(let w=0;w<=20;w++){
+      const t=w/20;
+      wPts.push(new THREE.Vector3(wx+Math.sin(t*Math.PI*3)*0.5,groundY+wh*(1-t),wz));
+    }
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(wPts),lineMat(0x66bbee,0.15)));
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+      wPts.map(p=>new THREE.Vector3(p.x+0.3,p.y+0.1,p.z))
+    ),lineMat(0x88ddff,0.1)));
+    // Splash pool at base
+    const splashGeo=new THREE.EllipseCurve(0,0,2,1.2,0,Math.PI*2,false,0).getPoints(20).map(p=>new THREE.Vector3(p.x+wx,groundY+0.1,p.y+wz));
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(splashGeo),lineMat(0x66bbee,0.1)));
+  }
+
+  // === Antenna / radio towers (tall, skeletal) ===
+  for(let i=0;i<8;i++){
+    const ax=(Math.random()-0.5)*160;
+    const az=-40-Math.random()*30;
+    const ah=50+Math.random()*30;
+    // Main mast
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(ax,groundY,az),new THREE.Vector3(ax,groundY+ah,az)
+    ]),lineMat(PALE,0.15)));
+    // Cross struts
+    for(let s=0;s<ah;s+=6){
+      const sw=3*(1-s/ah);
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(ax-sw,groundY+s,az),new THREE.Vector3(ax+sw,groundY+s,az)
+      ]),lineMat(GOLD,0.08)));
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(ax-sw,groundY+s,az),new THREE.Vector3(ax,groundY+s+6,az)
+      ]),lineMat(GOLD,0.06)));
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(ax+sw,groundY+s,az),new THREE.Vector3(ax,groundY+s+6,az)
+      ]),lineMat(GOLD,0.06)));
+    }
+    // Blinking top light
+    const aLight=new THREE.Mesh(new THREE.SphereGeometry(0.4,4,4),solidMat(0xff0000,0.9));
+    aLight.position.set(ax,groundY+ah,az);destWorld.add(aLight);
+    buildings.push({beacon:aLight,h:ah});
   }
 
   scene.add(destWorld);
@@ -2210,13 +2527,40 @@ body {
       for(const car of flyingCars){
         car.angle+=car.speed*0.016;
         car.mesh.position.x=Math.cos(car.angle)*car.radius;
-        car.mesh.position.z=Math.sin(car.angle)*car.radius-30;
+        car.mesh.position.z=Math.sin(car.angle)*car.radius+(car.centerZ||(-30));
         car.mesh.position.y=car.baseY+Math.sin(t*0.5+car.angle)*car.yVar;
-        car.mesh.rotation.y=car.angle+Math.PI*0.5;
+        car.mesh.rotation.y=car.angle+Math.PI*0.5*(car.speed>0?1:-1);
       }
       // Pulse building beacons
       for(const b of buildings){
         b.beacon.material.opacity=0.4+Math.sin(t*2+b.h)*0.4;
+      }
+      // Animate lanterns
+      for(const ln of lanterns){
+        ln.mesh.position.y=ln.baseY+Math.sin(t*ln.speed+ln.phase)*ln.drift;
+        ln.mesh.material.opacity=0.5+Math.sin(t*1.5+ln.phase)*0.3;
+      }
+      // Animate boats drifting along river
+      for(const bt of boats){
+        bt.riverIdx=(bt.riverIdx+bt.speed)%riverPts.length;
+        const idx=Math.floor(bt.riverIdx);
+        const p=riverPts[Math.max(0,Math.min(idx,riverPts.length-1))];
+        if(p){
+          bt.mesh.position.x=p.x+Math.sin(t+bt.phase)*1.5;
+          bt.mesh.position.z=p.z;
+          bt.mesh.position.y=groundY+0.2+Math.sin(t*2+bt.phase)*0.15;
+          bt.mesh.rotation.y=Math.sin(t*0.5+bt.phase)*0.2;
+        }
+      }
+      // Animate birds
+      for(const bd of birds){
+        bd.angle+=bd.orbSpeed*0.016;
+        bd.mesh.position.x=Math.cos(bd.angle)*bd.radius;
+        bd.mesh.position.z=Math.sin(bd.angle)*bd.radius-30;
+        bd.mesh.position.y=bd.baseY+Math.sin(t*0.8+bd.phase)*3;
+        // Wing flap
+        const flap=Math.sin(t*bd.speed+bd.phase)*0.3;
+        bd.mesh.rotation.z=flap;
       }
       // Animate river — shimmer and wave motion
       for(const rs of riverShimmerLines){
