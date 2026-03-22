@@ -37,7 +37,7 @@ body {
   overflow-y: auto;
   perspective: 1200px; transform-style: preserve-3d;
 }
-.slide.active { opacity: 1; pointer-events: auto; z-index: 2; }
+.slide.active { opacity: 1; pointer-events: auto; z-index: 2; cursor: pointer; }
 .slide.prev { opacity: 0; }
 
 /* ── ENTER: cinematic element assembly ── */
@@ -935,7 +935,7 @@ body {
   function next(){goTo(current+1)}function prev(){goTo(current-1)}
   document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();prev()}});
   document.getElementById('nextBtn').addEventListener('click',next);document.getElementById('prevBtn').addEventListener('click',prev);
-  document.getElementById('deck').addEventListener('click',e=>{if(e.target.closest('.slide-controls, a, button'))return;if(e.clientX<window.innerWidth*0.3)prev();else next()});
+  document.addEventListener('click',e=>{if(e.target.closest('.slide-controls, a, button, #bgCanvas'))return;const deck=document.getElementById('deck');if(!deck.contains(e.target)&&e.target!==deck)return;if(e.clientX<window.innerWidth*0.3)prev();else next()});
   let touchStartX=0;document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX});document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-touchStartX;if(Math.abs(dx)>50){dx<0?next():prev()}});
   goTo(0);
 
