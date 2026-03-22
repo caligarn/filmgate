@@ -423,6 +423,8 @@ body {
             <li>Creator programs: Google Labs, OpenAI, Pika, Luma, ByteDance, Flora, Weavy, Krea</li>
             <li>Zen Buddhism — meditation and scholarship</li>
           </ul>
+          <p style="color:var(--accent); font-size:1.05rem; font-weight:500; margin-top:1.25rem; line-height:1.6;">My mission is to empower storytellers and creative people all over the world with AI.</p>
+          <p style="color:var(--text-muted); font-size:0.95rem; margin-top:0.5rem; line-height:1.6;">We do that with events, accelerator programs, collective projects, and more.</p>
         </div>
       </div>
 <pre class="ascii-art accent" style="margin-top:1rem;">
@@ -1453,92 +1455,343 @@ body {
 
   // ═══════════════════════════════════════
   // LAYER 7: DESTINATION WORLD (inside black hole)
-  // Futuristic planet surface with buildings, flying cars, clouds
+  // Majestic cityscape with diverse architecture, mountains, river
   // ═══════════════════════════════════════
   const destWorld=new THREE.Group();
   destWorld.visible=false;
-  // Position at the black hole core world location
-  // L6 is at y=870, z=-80; core is at local (0,0,-35)
   const destY=870,destZ=-80-35;
   destWorld.position.set(0,destY,destZ);
 
-  // --- Ground plane: glowing grid ---
+  // --- Ground plane ---
   const groundY=-12;
-  for(let i=-20;i<=20;i++){
-    // X-parallel grid lines
-    const gx=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-100,groundY,i*5),new THREE.Vector3(100,groundY,i*5)
-    ]),lineMat(i%5===0?ORANGE:GOLD,i%5===0?0.25:0.08));
-    destWorld.add(gx);
-    // Z-parallel grid lines
-    const gz=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(i*5,groundY,-100),new THREE.Vector3(i*5,groundY,100)
-    ]),lineMat(i%5===0?ORANGE:GOLD,i%5===0?0.25:0.08));
-    destWorld.add(gz);
-  }
-  // Ground fill
-  const groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(200,200),solidMat(0x1a0800,0.15));
+  const groundMesh=new THREE.Mesh(new THREE.PlaneGeometry(300,300),solidMat(0x1a0800,0.12));
   groundMesh.rotation.x=-Math.PI/2;groundMesh.position.y=groundY-0.1;destWorld.add(groundMesh);
+  // Subtle ground grid
+  for(let i=-30;i<=30;i++){
+    const op=i%5===0?0.12:0.04;
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-150,groundY,i*5),new THREE.Vector3(150,groundY,i*5)]),lineMat(GOLD,op)));
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i*5,groundY,-150),new THREE.Vector3(i*5,groundY,150)]),lineMat(GOLD,op)));
+  }
 
-  // --- Futuristic buildings: wireframe towers ---
+  // === RIVER flowing through the center (like the Seine in Paris) ===
+  const riverPts=[];
+  const riverWidth=8;
+  for(let i=0;i<=100;i++){
+    const t=i/100;
+    const z=(t-0.5)*280;
+    const x=Math.sin(t*Math.PI*2.5)*6+Math.sin(t*Math.PI*5)*2; // gentle S-curves
+    riverPts.push({x,z});
+  }
+  // River surface — multiple translucent strips
+  for(let s=-3;s<=3;s++){
+    const pts=riverPts.map(p=>new THREE.Vector3(p.x+s*1.2,groundY+0.05,p.z));
+    const curve=new THREE.CatmullRomCurve3(pts).getPoints(200);
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(0x4499cc,0.15-Math.abs(s)*0.02)));
+  }
+  // River banks
+  for(let side=-1;side<=1;side+=2){
+    const bankPts=riverPts.map(p=>new THREE.Vector3(p.x+side*riverWidth,groundY+0.3,p.z));
+    const bankCurve=new THREE.CatmullRomCurve3(bankPts).getPoints(200);
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(bankCurve),lineMat(WARM,0.25)));
+  }
+  // Animated river shimmer lines (stored for animation)
+  const riverShimmerLines=[];
+  for(let i=0;i<15;i++){
+    const idx=Math.floor(Math.random()*80)+10;
+    const p=riverPts[idx];
+    const shimmer=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(p.x-riverWidth*0.6,groundY+0.15,p.z),
+      new THREE.Vector3(p.x+riverWidth*0.6,groundY+0.15,p.z)
+    ]),lineMat(0x66ccff,0.0));
+    destWorld.add(shimmer);
+    riverShimmerLines.push({line:shimmer,phase:Math.random()*Math.PI*2});
+  }
+
+  // Helper: add a building with windows and optional beacon
   const buildings=[];
-  const buildingData=[
-    {x:-35,z:-30,w:6,d:6,h:40},{x:-25,z:-20,w:4,d:4,h:28},{x:-15,z:-35,w:8,d:5,h:55},
-    {x:10,z:-25,w:5,d:5,h:35},{x:22,z:-30,w:7,d:4,h:48},{x:35,z:-20,w:4,d:4,h:30},
-    {x:45,z:-35,w:6,d:6,h:60},{x:-45,z:-25,w:5,d:5,h:38},{x:55,z:-28,w:4,d:4,h:25},
-    {x:-55,z:-32,w:7,d:5,h:45},{x:0,z:-40,w:10,d:8,h:70},{x:-8,z:-22,w:4,d:4,h:32},
-    {x:30,z:-45,w:5,d:5,h:42},{x:-40,z:-45,w:6,d:4,h:50},{x:50,z:-15,w:4,d:6,h:33},
-    {x:-20,z:-50,w:5,d:5,h:38},{x:15,z:-50,w:6,d:6,h:52},{x:60,z:-40,w:5,d:4,h:28},
-  ];
-  buildingData.forEach(b=>{
-    const geo=new THREE.BoxGeometry(b.w,b.h,b.d);
-    // Wireframe outline
+  function addBuilding(group,x,z,geo,h,hasBeacon){
     const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.3));
-    wire.position.set(b.x,groundY+b.h/2,b.z);destWorld.add(wire);
-    // Solid fill
-    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.06));
-    fill.position.copy(wire.position);destWorld.add(fill);
-    // Glowing windows — horizontal lines on facades
-    for(let wy=3;wy<b.h-2;wy+=3){
-      if(Math.random()>0.3){
+    wire.position.set(x,groundY+h/2,z);group.add(wire);
+    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.05));
+    fill.position.copy(wire.position);group.add(fill);
+    // Windows
+    for(let wy=3;wy<h-2;wy+=3){
+      if(Math.random()>0.25){
+        const ww=geo.parameters?geo.parameters.width||4:4;
+        const wd=geo.parameters?geo.parameters.depth||4:4;
         const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(-b.w/2,0,b.d/2+0.1),new THREE.Vector3(b.w/2,0,b.d/2+0.1)
+          new THREE.Vector3(-ww*0.4,0,wd*0.5+0.1),new THREE.Vector3(ww*0.4,0,wd*0.5+0.1)
         ]),lineMat(Math.random()>0.5?WARM:BRIGHT,0.2+Math.random()*0.3));
-        winLine.position.set(b.x,groundY+wy,b.z);destWorld.add(winLine);
+        winLine.position.set(x,groundY+wy,z);group.add(winLine);
       }
     }
-    // Antenna/spire on top of tall buildings
-    if(b.h>40){
+    if(hasBeacon){
       const spire=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0,0,0),new THREE.Vector3(0,b.h*0.2,0)
+        new THREE.Vector3(0,0,0),new THREE.Vector3(0,h*0.15,0)
       ]),lineMat(BRIGHT,0.4));
-      spire.position.set(b.x,groundY+b.h,b.z);destWorld.add(spire);
-      // Beacon light
+      spire.position.set(x,groundY+h,z);group.add(spire);
       const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.4,6,4),solidMat(BRIGHT,0.8));
-      beacon.position.set(b.x,groundY+b.h+b.h*0.2,b.z);destWorld.add(beacon);
-      buildings.push({beacon,h:b.h});
+      beacon.position.set(x,groundY+h+h*0.15,z);group.add(beacon);
+      buildings.push({beacon,h});
+    }
+  }
+
+  // Helper: create dome geometry
+  function makeDome(radius,h){
+    const geo=new THREE.SphereGeometry(radius,16,12,0,Math.PI*2,0,Math.PI*0.5);
+    return geo;
+  }
+
+  // Helper: create a tower with cylindrical base
+  function addTower(group,x,z,radius,h,hasBeacon){
+    const geo=new THREE.CylinderGeometry(radius,radius,h,12);
+    const wire=new THREE.LineSegments(new THREE.WireframeGeometry(geo),lineMat(GOLD,0.25));
+    wire.position.set(x,groundY+h/2,z);group.add(wire);
+    const fill=new THREE.Mesh(geo,solidMat(DEEP,0.04));
+    fill.position.copy(wire.position);group.add(fill);
+    // Horizontal ring windows
+    for(let wy=4;wy<h-2;wy+=4){
+      if(Math.random()>0.2){
+        const ring=new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(
+            new THREE.EllipseCurve(0,0,radius+0.1,radius+0.1,0,Math.PI*2,false,0).getPoints(24).map(p=>new THREE.Vector3(p.x,0,p.y))
+          ),lineMat(WARM,0.2+Math.random()*0.2));
+        ring.position.set(x,groundY+wy,z);group.add(ring);
+      }
+    }
+    if(hasBeacon){
+      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.5,6,4),solidMat(BRIGHT,0.8));
+      beacon.position.set(x,groundY+h+1,z);group.add(beacon);
+      buildings.push({beacon,h});
+    }
+  }
+
+  // Helper: add dome building (dome on top of a cylinder or box base)
+  function addDomeBuilding(group,x,z,radius,baseH,domeR){
+    // Cylindrical base
+    const baseGeo=new THREE.CylinderGeometry(radius,radius,baseH,16);
+    const baseWire=new THREE.LineSegments(new THREE.WireframeGeometry(baseGeo),lineMat(GOLD,0.25));
+    baseWire.position.set(x,groundY+baseH/2,z);group.add(baseWire);
+    const baseFill=new THREE.Mesh(baseGeo,solidMat(DEEP,0.04));
+    baseFill.position.copy(baseWire.position);group.add(baseFill);
+    // Dome on top
+    const domeGeo=makeDome(domeR||radius,radius);
+    const domeWire=new THREE.LineSegments(new THREE.WireframeGeometry(domeGeo),lineMat(ORANGE,0.35));
+    domeWire.position.set(x,groundY+baseH,z);group.add(domeWire);
+    const domeFill=new THREE.Mesh(domeGeo,solidMat(WARM,0.06));
+    domeFill.position.copy(domeWire.position);group.add(domeFill);
+    // Dome top finial
+    const finial=new THREE.Mesh(new THREE.SphereGeometry(0.3,6,4),solidMat(BRIGHT,0.7));
+    finial.position.set(x,groundY+baseH+(domeR||radius),z);group.add(finial);
+    buildings.push({beacon:finial,h:baseH+(domeR||radius)});
+    // Arched windows on base
+    for(let wy=3;wy<baseH-1;wy+=4){
+      const ring=new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(
+          new THREE.EllipseCurve(0,0,radius+0.1,radius+0.1,0,Math.PI*2,false,0).getPoints(20).map(p=>new THREE.Vector3(p.x,0,p.y))
+        ),lineMat(WARM,0.2));
+      ring.position.set(x,groundY+wy,z);group.add(ring);
+    }
+  }
+
+  // Helper: add a gothic/pointed arch tower
+  function addGothicTower(group,x,z,w,h){
+    // Square base
+    const baseGeo=new THREE.BoxGeometry(w,h*0.7,w);
+    const baseWire=new THREE.LineSegments(new THREE.WireframeGeometry(baseGeo),lineMat(GOLD,0.25));
+    baseWire.position.set(x,groundY+h*0.35,z);group.add(baseWire);
+    group.add(new THREE.Mesh(baseGeo,solidMat(DEEP,0.04)).copy(baseWire).position?baseWire:baseWire);
+    const baseFill=new THREE.Mesh(baseGeo,solidMat(DEEP,0.04));
+    baseFill.position.copy(baseWire.position);group.add(baseFill);
+    // Pointed spire (cone)
+    const spireGeo=new THREE.ConeGeometry(w*0.5,h*0.35,8);
+    const spireWire=new THREE.LineSegments(new THREE.WireframeGeometry(spireGeo),lineMat(ORANGE,0.3));
+    spireWire.position.set(x,groundY+h*0.7+h*0.175,z);group.add(spireWire);
+    const spireFill=new THREE.Mesh(spireGeo,solidMat(DEEP,0.04));
+    spireFill.position.copy(spireWire.position);group.add(spireFill);
+    // Top beacon
+    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.35,6,4),solidMat(BRIGHT,0.8));
+    beacon.position.set(x,groundY+h+1,z);group.add(beacon);
+    buildings.push({beacon,h});
+    // Windows
+    for(let wy=4;wy<h*0.65;wy+=4){
+      if(Math.random()>0.3){
+        const winLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-w*0.35,0,w*0.5+0.1),new THREE.Vector3(w*0.35,0,w*0.5+0.1)
+        ]),lineMat(BRIGHT,0.25));
+        winLine.position.set(x,groundY+wy,z);group.add(winLine);
+      }
+    }
+  }
+
+  // Helper: add a pagoda/tiered tower
+  function addPagoda(group,x,z,baseW,h,tiers){
+    const tierH=h/tiers;
+    for(let ti=0;ti<tiers;ti++){
+      const tw=baseW*(1-ti*0.12);
+      const ty=groundY+ti*tierH+tierH/2;
+      const tGeo=new THREE.BoxGeometry(tw,tierH*0.6,tw);
+      const tWire=new THREE.LineSegments(new THREE.WireframeGeometry(tGeo),lineMat(GOLD,0.25));
+      tWire.position.set(x,ty,z);group.add(tWire);
+      const tFill=new THREE.Mesh(tGeo,solidMat(DEEP,0.04));
+      tFill.position.copy(tWire.position);group.add(tFill);
+      // Eave/roof overhang
+      const eaveGeo=new THREE.BoxGeometry(tw*1.3,0.15,tw*1.3);
+      const eave=new THREE.LineSegments(new THREE.WireframeGeometry(eaveGeo),lineMat(ORANGE,0.2));
+      eave.position.set(x,ty+tierH*0.3,z);group.add(eave);
+    }
+    // Top spire
+    const topSpire=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0,0,0),new THREE.Vector3(0,5,0)
+    ]),lineMat(BRIGHT,0.4));
+    topSpire.position.set(x,groundY+h,z);group.add(topSpire);
+    const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.35,6,4),solidMat(BRIGHT,0.8));
+    beacon.position.set(x,groundY+h+5,z);group.add(beacon);
+    buildings.push({beacon,h:h+5});
+  }
+
+  // === LEFT BANK (x < -riverWidth) — classical European style ===
+  // Grand domed cathedral (center-left, most prominent)
+  addDomeBuilding(destWorld,-20,-35,7,30,8);
+  // Smaller domes nearby
+  addDomeBuilding(destWorld,-35,-25,4,18,5);
+  addDomeBuilding(destWorld,-15,-20,3,12,3.5);
+  // Gothic towers
+  addGothicTower(destWorld,-45,-35,5,50);
+  addGothicTower(destWorld,-30,-45,4,38);
+  // Classical rectangular buildings of various heights
+  addBuilding(destWorld,-55,-30,new THREE.BoxGeometry(6,35,5),35,true);
+  addBuilding(destWorld,-50,-20,new THREE.BoxGeometry(4,22,4),22,false);
+  addBuilding(destWorld,-25,-55,new THREE.BoxGeometry(5,28,5),28,false);
+  addBuilding(destWorld,-40,-15,new THREE.BoxGeometry(7,18,6),18,false);
+  addBuilding(destWorld,-60,-40,new THREE.BoxGeometry(5,25,4),25,false);
+  addBuilding(destWorld,-15,-50,new THREE.BoxGeometry(4,20,4),20,false);
+  // Round towers
+  addTower(destWorld,-48,-45,2.5,42,true);
+  addTower(destWorld,-18,-28,2,25,false);
+
+  // === RIGHT BANK (x > riverWidth) — diverse & exotic ===
+  // Large dome — mosque/basilica style
+  addDomeBuilding(destWorld,22,-35,6,25,7);
+  // Pagoda
+  addPagoda(destWorld,40,-30,7,45,5);
+  // Gothic spire
+  addGothicTower(destWorld,15,-25,4,55);
+  addGothicTower(destWorld,55,-40,4.5,42);
+  // Cylindrical towers
+  addTower(destWorld,30,-20,3,35,true);
+  addTower(destWorld,50,-25,2,30,false);
+  addTower(destWorld,60,-35,2.5,28,true);
+  // Rectangular buildings
+  addBuilding(destWorld,35,-45,new THREE.BoxGeometry(5,32,5),32,false);
+  addBuilding(destWorld,45,-15,new THREE.BoxGeometry(6,20,5),20,false);
+  addBuilding(destWorld,25,-50,new THREE.BoxGeometry(4,24,4),24,false);
+  addBuilding(destWorld,18,-45,new THREE.BoxGeometry(5,18,4),18,false);
+  addBuilding(destWorld,65,-28,new THREE.BoxGeometry(4,15,4),15,false);
+  // Small dome
+  addDomeBuilding(destWorld,48,-48,3,10,3);
+
+  // === BRIDGES crossing the river ===
+  for(let bi=0;bi<4;bi++){
+    const bz=-60+bi*35;
+    const idx=Math.floor((bz/280+0.5)*100);
+    const cIdx=Math.max(0,Math.min(99,idx));
+    const rx=riverPts[cIdx]?riverPts[cIdx].x:0;
+    // Bridge deck
+    const bridgeLen=riverWidth*3;
+    const bridge=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(rx-bridgeLen/2,groundY+1.5,bz),
+      new THREE.Vector3(rx-bridgeLen*0.15,groundY+3,bz),
+      new THREE.Vector3(rx+bridgeLen*0.15,groundY+3,bz),
+      new THREE.Vector3(rx+bridgeLen/2,groundY+1.5,bz)
+    ]),lineMat(WARM,0.35));
+    destWorld.add(bridge);
+    // Bridge arch underneath
+    const archPts=[];
+    for(let ai=0;ai<=20;ai++){
+      const at=ai/20;
+      const ax=rx+(at-0.5)*bridgeLen*0.6;
+      const ay=groundY+0.5+Math.sin(at*Math.PI)*2.5;
+      archPts.push(new THREE.Vector3(ax,ay,bz));
+    }
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(archPts),lineMat(GOLD,0.2)));
+    // Railing posts
+    for(let rp=-2;rp<=2;rp++){
+      const rpx=rx+rp*(bridgeLen*0.12);
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(rpx,groundY+2.8,bz),new THREE.Vector3(rpx,groundY+4,bz)
+      ]),lineMat(PALE,0.15)));
+    }
+  }
+
+  // === MAJESTIC MOUNTAINS in the background ===
+  // Multiple mountain ranges with increasing height toward the back
+  const mountainRanges=[
+    {zBase:-85,layers:3,maxH:25,color:ORANGE,opacity:0.2},
+    {zBase:-100,layers:3,maxH:40,color:GOLD,opacity:0.15},
+    {zBase:-120,layers:3,maxH:60,color:WARM,opacity:0.1},
+    {zBase:-145,layers:2,maxH:80,color:PALE,opacity:0.07},
+  ];
+  mountainRanges.forEach(mr=>{
+    for(let l=0;l<mr.layers;l++){
+      const pts=[];
+      const segments=120;
+      for(let i=0;i<=segments;i++){
+        const tx=i/segments;
+        const x=(tx-0.5)*280;
+        // Create distinct peaks using multiple sine waves
+        const peak1=Math.pow(Math.max(0,Math.sin(tx*Math.PI*2.5+l*0.7)),1.5)*mr.maxH*0.8;
+        const peak2=Math.pow(Math.max(0,Math.sin(tx*Math.PI*4+l*1.3+0.5)),2)*mr.maxH*0.5;
+        const peak3=Math.pow(Math.max(0,Math.sin(tx*Math.PI*1.5+l*2.1)),1.2)*mr.maxH*0.6;
+        const ridge=Math.sin(tx*Math.PI*8+l)*mr.maxH*0.05;
+        const noise=Math.sin(tx*Math.PI*15+l*3.7)*mr.maxH*0.03;
+        const y=groundY+Math.max(peak1,peak2,peak3)*0.7+ridge+noise+l*2;
+        pts.push(new THREE.Vector3(x,y,mr.zBase-l*5));
+      }
+      const curve=new THREE.CatmullRomCurve3(pts).getPoints(240);
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(mr.color,mr.opacity+l*0.02)));
     }
   });
+  // Snow-capped peaks (bright lines on the tallest range)
+  for(let l=0;l<2;l++){
+    const pts=[];
+    for(let i=0;i<=120;i++){
+      const tx=i/120;
+      const x=(tx-0.5)*280;
+      const peak1=Math.pow(Math.max(0,Math.sin(tx*Math.PI*2.5+l*0.7)),1.5)*80*0.8;
+      const peak2=Math.pow(Math.max(0,Math.sin(tx*Math.PI*4+l*1.3+0.5)),2)*80*0.5;
+      const peak3=Math.pow(Math.max(0,Math.sin(tx*Math.PI*1.5+l*2.1)),1.2)*80*0.6;
+      const baseH=Math.max(peak1,peak2,peak3)*0.7;
+      if(baseH>40){
+        pts.push(new THREE.Vector3(x,groundY+baseH+l*2,-145-l*5));
+      }
+    }
+    if(pts.length>2){
+      destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),lineMat(WHITE,0.08+l*0.02)));
+    }
+  }
 
-  // --- Flying cars: small elongated shapes that move ---
+  // === Horizon glow ===
+  for(let i=0;i<5;i++){
+    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-150,groundY+0.5+i*0.3,-160+i*2),new THREE.Vector3(150,groundY+0.5+i*0.3,-160+i*2)
+    ]),lineMat(ORANGE,0.12-i*0.02)));
+  }
+
+  // === Flying cars ===
   const flyingCars=[];
   for(let i=0;i<18;i++){
     const carGroup=new THREE.Group();
-    // Body — small elongated box
     const carBody=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.3,0.5),solidMat(Math.random()>0.5?WARM:PALE,0.6));
     carGroup.add(carBody);
-    // Windshield
     const windshield=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.25,0.52),solidMat(0x66ccff,0.4));
     windshield.position.x=0.2;windshield.position.y=0.15;carGroup.add(windshield);
-    // Engine glow trail
     const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(-0.6,0,0),new THREE.Vector3(-2.5,0,0)
     ]),lineMat(ORANGE,0.3));
     carGroup.add(trail);
-    // Underside glow
     const glow=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.6),solidMat(ORANGE,0.08));
     glow.rotation.x=Math.PI/2;glow.position.y=-0.2;carGroup.add(glow);
-
     const altitude=groundY+15+Math.random()*40;
     const radius=15+Math.random()*50;
     const speed=0.15+Math.random()*0.4;
@@ -1549,40 +1802,19 @@ body {
     flyingCars.push({mesh:carGroup,radius,speed,angle:startAngle,baseY:altitude,yVar});
   }
 
-  // --- Clouds: soft translucent ellipsoids ---
+  // === Clouds ===
   for(let i=0;i<25;i++){
     const cs=4+Math.random()*8;
     const cloud=new THREE.Mesh(new THREE.SphereGeometry(cs,12,8),solidMat(0xffeedd,0.025+Math.random()*0.02));
     cloud.scale.set(2+Math.random(),0.4+Math.random()*0.2,1+Math.random()*0.5);
-    cloud.position.set((Math.random()-0.5)*120,groundY+50+Math.random()*30,(Math.random()-0.5)*80-20);
+    cloud.position.set((Math.random()-0.5)*140,groundY+50+Math.random()*30,(Math.random()-0.5)*100-20);
     destWorld.add(cloud);
-    // Cloud contour rings
     for(let r=0;r<2;r++){
       const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(
         new THREE.EllipseCurve(0,0,cs*(1.5-r*0.3),cs*(0.35-r*0.05),0,Math.PI*2,false,0).getPoints(40).map(p=>new THREE.Vector3(p.x,p.y,0))
       ),lineMat(PALE,0.06+r*0.02));
       ring.position.copy(cloud.position);ring.rotation.x=Math.PI*0.5;destWorld.add(ring);
     }
-  }
-
-  // --- Horizon glow ---
-  for(let i=0;i<5;i++){
-    const hLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-120,groundY+0.5+i*0.3,-100+i*2),new THREE.Vector3(120,groundY+0.5+i*0.3,-100+i*2)
-    ]),lineMat(ORANGE,0.15-i*0.025));
-    destWorld.add(hLine);
-  }
-
-  // --- Distant mountains/terrain on horizon ---
-  for(let l=0;l<5;l++){
-    const pts=[];
-    for(let i=0;i<=80;i++){
-      const tx=i/80;const x=(tx-0.5)*200;
-      const y=groundY+Math.abs(Math.sin(tx*Math.PI*3+l*1.5))*8*(1+l*0.5)+Math.sin(tx*Math.PI*7+l)*2;
-      pts.push(new THREE.Vector3(x,y,-80-l*8));
-    }
-    const curve=new THREE.CatmullRomCurve3(pts).getPoints(160);
-    destWorld.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve),lineMat(l<2?ORANGE:GOLD,0.12-l*0.015)));
   }
 
   scene.add(destWorld);
@@ -1800,6 +2032,10 @@ body {
       // Pulse building beacons
       for(const b of buildings){
         b.beacon.material.opacity=0.4+Math.sin(t*2+b.h)*0.4;
+      }
+      // Animate river shimmer
+      for(const rs of riverShimmerLines){
+        rs.line.material.opacity=Math.max(0,Math.sin(t*3+rs.phase)*0.25);
       }
     } else {
       // Reset zoom state when leaving the slide
