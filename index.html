@@ -917,11 +917,18 @@ body {
     </div>
   </div>
 
+  <!-- 16: SEE YOU THERE -->
+  <div class="slide" data-slide="14">
+    <div class="container" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+      <h1 class="closing-title" style="font-size:clamp(3rem, 7vw, 5.5rem);">See you there.</h1>
+    </div>
+  </div>
+
 </div>
 
 <div class="slide-controls">
   <button id="prevBtn" aria-label="Previous slide">&larr;</button>
-  <div class="slide-counter" id="slideCounter">1 / 14</div>
+  <div class="slide-counter" id="slideCounter">1 / 15</div>
   <button id="nextBtn" aria-label="Next slide">&rarr;</button>
 </div>
 
@@ -1030,6 +1037,8 @@ body {
     L1.add(ff);floatingObjects.push({obj:ff,speed:0.5+Math.random(),amp:1+Math.random()*2,phase:Math.random()*10});
   }
   scene.add(L1);
+  // Store original opacities for zoom-landing fade-in
+  setTimeout(()=>L1.traverse(ch=>{if(ch.material&&ch.material.opacity!==undefined)ch.material._origOpacity=ch.material.opacity;}),0);
 
   // ═══════════════════════════════════════
   // LAYER 2: CLOUDS & PEAKS (slides 2-4)
@@ -1581,22 +1590,77 @@ body {
   // ═══════════════════════════════════════
   // CAMERA & ANIMATION
   // ═══════════════════════════════════════
-  const alts=[5,5,50,80,140,180,220,300,380,470,550,700,800,870];
+  const alts=[5,5,50,80,140,180,220,300,380,470,550,700,800,870,870];
   let curAlt=alts[0],curRot=0,lookY=alts[0]-5;
   const clock=new THREE.Clock();
+
+  // ── Planet zoom target for "See you there" slide ──
+  // Pick a planet from L5 (moon zone, y=550) to zoom into
+  // We'll target moonPlanets[0] which is at (-50,25,-55) in L5-local coords
+  // World position: x=-50, y=550+25=575, z=-55
+  const zoomTarget={x:-50,y:575,z:-55};
+  let zoomProgress=0; // 0 = not zooming, 1 = landed on surface
+  let zoomStartTime=0;
+  let zoomStartPos={x:0,y:870,z:40};
 
   function animate(){
     requestAnimationFrame(animate);
     const t=clock.getElapsedTime();
-    const tAlt=alts[Math.min(targetSlide,alts.length-1)];
-    curAlt+=(tAlt-curAlt)*0.008;
-    lookY+=(tAlt-8-lookY)*0.006;
-    curRot+=0.0007;
+    const isZoomSlide=targetSlide===14;
 
-    camera.position.y=curAlt;
-    camera.position.x=Math.sin(curRot)*6;
-    camera.position.z=40+Math.cos(curRot*0.5)*3;
-    camera.lookAt(0,lookY,-25);
+    if(isZoomSlide){
+      if(zoomStartTime===0){zoomStartTime=t;zoomStartPos={x:camera.position.x,y:camera.position.y,z:camera.position.z};}
+      const elapsed=t-zoomStartTime;
+      // Accelerating zoom over ~8 seconds
+      zoomProgress=Math.min(elapsed/8,1);
+      // Ease-in-out curve for cinematic feel
+      const ease=zoomProgress<0.5?4*zoomProgress*zoomProgress*zoomProgress:1-Math.pow(-2*zoomProgress+2,3)/2;
+
+      // Phase 1 (0-0.6): fly toward the planet
+      // Phase 2 (0.6-1.0): penetrate atmosphere, land on surface with ocean
+      if(ease<0.6){
+        const p=ease/0.6; // 0 to 1 within phase 1
+        // Fly toward the planet from where camera was
+        camera.position.x=zoomStartPos.x+(zoomTarget.x-zoomStartPos.x)*p;
+        camera.position.y=zoomStartPos.y+(zoomTarget.y-zoomStartPos.y)*p;
+        camera.position.z=zoomStartPos.z+(zoomTarget.z+60-zoomStartPos.z)*p;
+        camera.lookAt(zoomTarget.x,zoomTarget.y,zoomTarget.z);
+        // Narrow FOV for zoom effect
+        camera.fov=50-p*25;
+        camera.updateProjectionMatrix();
+      } else {
+        const p=(ease-0.6)/0.4; // 0 to 1 within phase 2
+        // We've arrived at the planet — now "enter" it and descend to ocean surface
+        // Transition camera down to slide-0 altitude with ocean waves
+        const planetY=zoomTarget.y;
+        const surfaceY=alts[0]; // same altitude as slide 0
+        camera.position.x=zoomTarget.x*(1-p)+0*p;
+        camera.position.y=planetY+(surfaceY-planetY)*p;
+        camera.position.z=(zoomTarget.z+60)*(1-p)+(40)*p;
+        const lookTgtY=planetY-10+(surfaceY-5-(planetY-10))*p;
+        camera.lookAt(camera.position.x*(1-p),lookTgtY,zoomTarget.z*(1-p)+(-25)*p);
+        // Widen FOV back to normal as we land
+        camera.fov=25+p*25;
+        camera.updateProjectionMatrix();
+
+        // Fade in the lake layer (L1) as we approach surface
+        L1.visible=true;
+        L1.children.forEach(ch=>{if(ch.material)ch.material.opacity=Math.min((ch.material._origOpacity||0.15)*p*1.5,ch.material._origOpacity||0.15)});
+      }
+    } else {
+      // Reset zoom state when leaving the slide
+      if(zoomStartTime!==0){zoomStartTime=0;zoomProgress=0;camera.fov=50;camera.updateProjectionMatrix();}
+
+      const tAlt=alts[Math.min(targetSlide,alts.length-1)];
+      curAlt+=(tAlt-curAlt)*0.008;
+      lookY+=(tAlt-8-lookY)*0.006;
+      curRot+=0.0007;
+
+      camera.position.y=curAlt;
+      camera.position.x=Math.sin(curRot)*6;
+      camera.position.z=40+Math.cos(curRot*0.5)*3;
+      camera.lookAt(0,lookY,-25);
+    }
 
     // Parallax — move star layers at different speeds relative to camera
     const camDelta=curAlt-alts[0];
@@ -1637,7 +1701,7 @@ body {
     }
 
     // Slowly drift the galaxy toward the camera once it appears
-    if(current>=11&&L6.position.z<-20) L6.position.z+=0.012;
+    if(current>=11&&current<=13&&L6.position.z<-20) L6.position.z+=0.012;
     L6.rotation.y+=0.003;L6.rotation.x=-0.38+Math.sin(t*0.15)*0.03;
 
     // Animate orbiting objects around the black hole
@@ -1657,7 +1721,7 @@ body {
     coreInner.scale.set(1/pulse,1/pulse,1/pulse);coreInner.rotation.y-=0.018;coreInner.rotation.z+=0.009;
 
     // Comets — spawn on final slides (11-13) and animate
-    if(current>=11){
+    if(current>=11&&current<=13){
       // Spawn new comets periodically
       if(Math.random()<0.04&&comets.length<8) spawnComet();
 
